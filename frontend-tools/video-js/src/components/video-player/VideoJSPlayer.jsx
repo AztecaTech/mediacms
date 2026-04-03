@@ -2403,29 +2403,45 @@ function VideoJSPlayer({ videoId = 'default-video', showTitle = true, showRelate
 
         if (embedUrl) {
             return (
-                <div className="player-container external-video-container" style={{ position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden' }}>
-                    <iframe
-                        src={embedUrl}
-                        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }}
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                        title={mediaData.data?.title || 'External video'}
-                    />
+                <div className="player-container external-video-container">
+                    <div className="player-container-inner">
+                        <iframe
+                            src={embedUrl}
+                            style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                width: '100%',
+                                height: '100%',
+                                border: 'none',
+                            }}
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                            title={mediaData.data?.title || 'External video'}
+                        />
+                    </div>
                 </div>
             );
         }
 
         if (embedHtml) {
             return (
-                <div className="player-container external-video-container" dangerouslySetInnerHTML={{ __html: embedHtml }} />
+                <div className="player-container external-video-container">
+                    <div className="player-container-inner" dangerouslySetInnerHTML={{ __html: embedHtml }} />
+                </div>
             );
         }
 
         return (
-            <div className="player-container external-video-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '300px' }}>
-                <a href={sourceUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: '1.2em' }}>
-                    Open video in new tab
-                </a>
+            <div className="player-container external-video-container">
+                <div
+                    className="player-container-inner"
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                >
+                    <a href={sourceUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: '1.2em' }}>
+                        Open video in new tab
+                    </a>
+                </div>
             </div>
         );
     }
