@@ -1,0 +1,161 @@
+# Dokploy / production-style compose: builds YOUR repo (Dockerfile), not Docker Hub.
+# In Dokploy set "Compose Path" to: ./docker-compose.dokploy.yml
+#
+# Required env in Dokploy (project or service):
+#   FRONTEND_HOST=https://your.domain.tld
+#   SECRET_KEY=<long-random-string>
+#   POSTGRES_PASSWORD=<strong-password>
+#
+# Optional:
+#   ADMIN_PASSWORD=...  (else prestart generates one and prints to logs on first install)
+
+version: "3.9"
+
+services:
+  db:
+    image: postgres:17.2-alpine
+    restart: unless-stopped
+    volumes:
+      - mediacms_pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: mediacms
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mediacms}
+      POSTGRES_DB: mediacms
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  migrations:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: on-failure
+    command: ["./deploy/docker/prestart.sh"]
+    environment:
+      ENABLE_UWSGI: "no"
+      ENABLE_NGINX: "no"
+      ENABLE_CELERY_SHORT: "no"
+      ENABLE_CELERY_LONG: "no"
+      ENABLE_CELERY_BEAT: "no"
+      ENABLE_MIGRATIONS: "yes"
+      FRONTEND_HOST: ${FRONTEND_HOST:-http://localhost}
+      SECRET_KEY: ${SECRET_KEY}
+      POSTGRES_HOST: db
+      POSTGRES_NAME: mediacms
+      POSTGRES_USER: mediacms
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mediacms}
+      POSTGRES_PORT: "5432"
+      REDIS_LOCATION: redis://redis:6379/1
+      ADMIN_USER: ${ADMIN_USER:-admin}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@localhost}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+    volumes:
+      - mediacms_media:/home/mediacms.io/mediacms/media_files
+    depends_on:
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    environment:
+      ENABLE_CELERY_BEAT: "no"
+      ENABLE_CELERY_SHORT: "no"
+      ENABLE_CELERY_LONG: "no"
+      ENABLE_MIGRATIONS: "no"
+      FRONTEND_HOST: ${FRONTEND_HOST:-http://localhost}
+      SECRET_KEY: ${SECRET_KEY}
+      POSTGRES_HOST: db
+      POSTGRES_NAME: mediacms
+      POSTGRES_USER: mediacms
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mediacms}
+      POSTGRES_PORT: "5432"
+      REDIS_LOCATION: redis://redis:6379/1
+      DEBUG: "False"
+    volumes:
+      - mediacms_media:/home/mediacms.io/mediacms/media_files
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+
+  celery_beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      ENABLE_UWSGI: "no"
+      ENABLE_NGINX: "no"
+      ENABLE_CELERY_SHORT: "no"
+      ENABLE_CELERY_LONG: "no"
+      ENABLE_MIGRATIONS: "no"
+      FRONTEND_HOST: ${FRONTEND_HOST:-http://localhost}
+      SECRET_KEY: ${SECRET_KEY}
+      POSTGRES_HOST: db
+      POSTGRES_NAME: mediacms
+      POSTGRES_USER: mediacms
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mediacms}
+      POSTGRES_PORT: "5432"
+      REDIS_LOCATION: redis://redis:6379/1
+    volumes:
+      - mediacms_media:/home/mediacms.io/mediacms/media_files
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+
+  celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      ENABLE_UWSGI: "no"
+      ENABLE_NGINX: "no"
+      ENABLE_CELERY_BEAT: "no"
+      ENABLE_MIGRATIONS: "no"
+      FRONTEND_HOST: ${FRONTEND_HOST:-http://localhost}
+      SECRET_KEY: ${SECRET_KEY}
+      POSTGRES_HOST: db
+      POSTGRES_NAME: mediacms
+      POSTGRES_USER: mediacms
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mediacms}
+      POSTGRES_PORT: "5432"
+      REDIS_LOCATION: redis://redis:6379/1
+    volumes:
+      - mediacms_media:/home/mediacms.io/mediacms/media_files
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+
+volumes:
+  mediacms_pgdata:
+  mediacms_media:
