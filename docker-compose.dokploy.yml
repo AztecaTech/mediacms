@@ -8,8 +8,7 @@
 #
 # Optional:
 #   ADMIN_PASSWORD=...  (else prestart generates one and prints to logs on first install)
-
-version: "3.9"
+#   HTTP_PUBLISH_PORT=8080  (host port for web; default 8080 — Dokploy/nginx often already uses 80)
 
 services:
   db:
@@ -74,7 +73,7 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
-      - "80:80"
+      - "${HTTP_PUBLISH_PORT:-8080}:80"
     environment:
       ENABLE_CELERY_BEAT: "no"
       ENABLE_CELERY_SHORT: "no"
