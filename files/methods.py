@@ -2,6 +2,7 @@
 # related content
 
 import itertools
+import json
 import logging
 import os
 import random
@@ -430,6 +431,40 @@ def user_allowed_to_upload(request):
         if request.user.advancedUser:
             return True
     return False
+
+
+def categories_queryset_for_uploading_user(user):
+    """Categories a user may assign when creating new media (mirrors MediaPublishForm)."""
+    if is_mediacms_editor(user):
+        return models.Category.objects.all().order_by("title")
+    combined_ids = list(models.Category.objects.filter(is_rbac_category=False).values_list("id", flat=True))
+    if getattr(settings, "USE_RBAC", False) and user.is_authenticated:
+        combined_ids += list(user.get_rbac_categories_as_contributor().values_list("id", flat=True))
+    return models.Category.objects.filter(id__in=combined_ids).order_by("title")
+
+
+def parse_category_uids_from_request(request):
+    """Collect category uid values from JSON or multipart (list or repeated keys)."""
+    raw = request.data.get("category_uids")
+    if raw is None and hasattr(request.data, "getlist"):
+        lst = request.data.getlist("category_uids")
+        raw = lst if lst else None
+    if raw is None or raw == "" or raw == []:
+        return []
+    if isinstance(raw, str):
+        raw = raw.strip()
+        if not raw:
+            return []
+        try:
+            parsed = json.loads(raw)
+            if isinstance(parsed, list):
+                return [str(x) for x in parsed if x]
+            return [str(parsed)]
+        except (json.JSONDecodeError, TypeError, ValueError):
+            return [raw]
+    if isinstance(raw, (list, tuple)):
+        return [str(x) for x in raw if x]
+    return [str(raw)]
 
 
 def can_transcribe_video(user):

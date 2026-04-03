@@ -35,6 +35,26 @@
 				</div>
 				<div class="media-uploader-top-right-wrap"> </div>
 			</div>
+			<div class="add-media-mode-tabs" role="tablist" style="display:flex;gap:8px;margin-bottom:1rem;">
+				<button type="button" class="add-media-tab add-media-tab-active" data-mode="upload" id="add-media-tab-upload" aria-selected="true" style="padding:8px 16px;border:1px solid #ccc;background:#fff;cursor:pointer;">{{ "Upload file" | custom_translate:LANGUAGE_CODE}}</button>
+				<button type="button" class="add-media-tab" data-mode="external" id="add-media-tab-external" aria-selected="false" style="padding:8px 16px;border:1px solid #ccc;background:#f5f5f5;cursor:pointer;">{{ "External video" | custom_translate:LANGUAGE_CODE}}</button>
+			</div>
+			<div id="add-media-panel-external" class="add-media-external-panel" style="display:none;max-width:640px;margin-bottom:1.5rem;padding:12px;border:1px solid rgba(0,0,0,.08);border-radius:4px;">
+				{{ external_upload_categories|json_script:"external-upload-categories-data" }}
+				<p style="margin:0 0 12px;font-size:14px;">{{ "Paste a link from YouTube, Vimeo, or another supported site." | custom_translate:LANGUAGE_CODE}}</p>
+				<label for="external-video-url" style="display:block;font-size:13px;margin-bottom:4px;">URL</label>
+				<input type="url" id="external-video-url" required placeholder="https://..." style="width:100%;max-width:100%;box-sizing:border-box;padding:8px;margin-bottom:10px;" />
+				<label for="external-video-title" style="display:block;font-size:13px;margin-bottom:4px;">{{ "Title" | custom_translate:LANGUAGE_CODE}} <span style="font-weight:normal;opacity:.7;">({{ "optional" | custom_translate:LANGUAGE_CODE}})</span></label>
+				<input type="text" id="external-video-title" style="width:100%;max-width:100%;box-sizing:border-box;padding:8px;margin-bottom:10px;" />
+				<label for="external-video-description" style="display:block;font-size:13px;margin-bottom:4px;">{{ "Description" | custom_translate:LANGUAGE_CODE}}</label>
+				<textarea id="external-video-description" rows="3" style="width:100%;max-width:100%;box-sizing:border-box;padding:8px;margin-bottom:12px;"></textarea>
+				<label for="external-video-categories" style="display:block;font-size:13px;margin-bottom:4px;">{{ "Categories" | custom_translate:LANGUAGE_CODE}} <span style="font-weight:normal;opacity:.7;">({{ "optional" | custom_translate:LANGUAGE_CODE}}, Ctrl+click)</span></label>
+				<select id="external-video-categories" multiple size="5" style="width:100%;max-width:100%;box-sizing:border-box;padding:8px;margin-bottom:10px;"></select>
+				<label for="external-video-poster" style="display:block;font-size:13px;margin-bottom:4px;">{{ "Poster / thumbnail" | custom_translate:LANGUAGE_CODE}} <span style="font-weight:normal;opacity:.7;">({{ "optional" | custom_translate:LANGUAGE_CODE}})</span></label>
+				<input type="file" id="external-video-poster" accept="image/*" style="margin-bottom:12px;" />
+				<p id="external-video-error" style="display:none;color:#b00020;font-size:13px;margin-bottom:8px;"></p>
+				<button type="button" id="external-video-submit" style="padding:10px 20px;cursor:pointer;">{{ "Add video" | custom_translate:LANGUAGE_CODE}}</button>
+			</div>
 			<script type="text/template" id="qq-template">
 				<div class="media-uploader-bottom-wrap qq-uploader-selector">
 					<div class="media-uploader-bottom-left-wrap">
@@ -118,7 +138,9 @@
 					</div>
 				</div>
 			</script>
+			<div id="add-media-panel-upload" class="add-media-upload-panel">
 			<div class="media-uploader"></div>
+			</div>
 		</div>
 
 	{% else %}
@@ -140,6 +162,93 @@
 <script src="{% static "js/add-media.js" %}?v={{ VERSION }}"></script>
 <script>
 	document.addEventListener("DOMContentLoaded", function(event) {
+		var uploadPanel = document.getElementById('add-media-panel-upload');
+		var externalPanel = document.getElementById('add-media-panel-external');
+		var tabButtons = document.querySelectorAll('.add-media-tab');
+		function setAddMediaMode(mode) {
+			var isUpload = mode === 'upload';
+			if (uploadPanel) uploadPanel.style.display = isUpload ? '' : 'none';
+			if (externalPanel) externalPanel.style.display = isUpload ? 'none' : '';
+			tabButtons.forEach(function(btn) {
+				var active = btn.getAttribute('data-mode') === mode;
+				btn.classList.toggle('add-media-tab-active', active);
+				btn.setAttribute('aria-selected', active ? 'true' : 'false');
+				btn.style.background = active ? '#fff' : '#f5f5f5';
+			});
+		}
+		tabButtons.forEach(function(btn) {
+			btn.addEventListener('click', function() {
+				setAddMediaMode(btn.getAttribute('data-mode'));
+			});
+		});
+		(function populateExternalCategorySelect() {
+			var dataEl = document.getElementById('external-upload-categories-data');
+			var sel = document.getElementById('external-video-categories');
+			if (!dataEl || !sel) return;
+			try {
+				var rows = JSON.parse(dataEl.textContent);
+				for (var i = 0; i < rows.length; i++) {
+					var opt = document.createElement('option');
+					opt.value = rows[i].uid;
+					opt.textContent = rows[i].title;
+					sel.appendChild(opt);
+				}
+			} catch (e) {}
+		})();
+		var extSubmit = document.getElementById('external-video-submit');
+		var extError = document.getElementById('external-video-error');
+		if (extSubmit) {
+			extSubmit.addEventListener('click', function() {
+				var urlInput = document.getElementById('external-video-url');
+				var titleInput = document.getElementById('external-video-title');
+				var descInput = document.getElementById('external-video-description');
+				var catSelect = document.getElementById('external-video-categories');
+				var posterInput = document.getElementById('external-video-poster');
+				if (!urlInput || !urlInput.value.trim()) {
+					if (extError) { extError.style.display = 'block'; extError.textContent = 'URL is required.'; }
+					return;
+				}
+				if (extError) extError.style.display = 'none';
+				extSubmit.disabled = true;
+				var fd = new FormData();
+				fd.append('source_url', urlInput.value.trim());
+				if (titleInput && titleInput.value.trim()) fd.append('title', titleInput.value.trim());
+				if (descInput && descInput.value.trim()) fd.append('description', descInput.value.trim());
+				if (catSelect && catSelect.selectedOptions) {
+					for (var c = 0; c < catSelect.selectedOptions.length; c++) {
+						fd.append('category_uids', catSelect.selectedOptions[c].value);
+					}
+				}
+				if (posterInput && posterInput.files && posterInput.files.length) {
+					fd.append('uploaded_poster', posterInput.files[0]);
+				}
+				fetch('/api/v1/media', {
+					method: 'POST',
+					credentials: 'same-origin',
+					headers: {
+						'X-CSRFToken': getCSRFToken()
+					},
+					body: fd
+				}).then(function(res) {
+					return res.json().then(function(data) {
+						return { ok: res.ok, status: res.status, data: data };
+					}).catch(function() {
+						return { ok: false, status: res.status, data: {} };
+					});
+				}).then(function(result) {
+					extSubmit.disabled = false;
+					if (result.ok && result.data && result.data.url) {
+						window.location.href = result.data.url;
+						return;
+					}
+					var msg = (result.data && result.data.detail) ? result.data.detail : ('Error ' + result.status);
+					if (extError) { extError.style.display = 'block'; extError.textContent = msg; }
+				}).catch(function() {
+					extSubmit.disabled = false;
+					if (extError) { extError.style.display = 'block'; extError.textContent = 'Request failed.'; }
+				});
+			});
+		}
 		function getCSRFToken() {
 			var i, cookies, cookie, cookieVal = null;
 			if ( document.cookie && '' !== document.cookie ) {

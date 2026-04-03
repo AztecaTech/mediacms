@@ -27,6 +27,7 @@ from ..frontend_translations import translate_string
 from ..helpers import get_alphanumeric_only
 from ..methods import (
     can_transcribe_video,
+    categories_queryset_for_uploading_user,
     create_video_trim_request,
     get_user_or_session,
     handle_video_chapters,
@@ -679,6 +680,9 @@ def upload_media(request):
     context["can_add"] = user_allowed_to_upload(request)
     can_upload_exp = settings.CANNOT_ADD_MEDIA_MESSAGE
     context["can_upload_exp"] = can_upload_exp
+    context["external_upload_categories"] = list(
+        categories_queryset_for_uploading_user(request.user).values("uid", "title")
+    )
 
     return render(request, "cms/add-media.html", context)
 

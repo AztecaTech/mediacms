@@ -31,6 +31,7 @@ class MediaMetadataForm(forms.ModelForm):
             "description",
             "enable_comments",
             "thumbnail_time",
+            "source_url",
         )
 
         widgets = {
@@ -43,6 +44,7 @@ class MediaMetadataForm(forms.ModelForm):
             "friendly_token": "Slug",
             "uploaded_poster": "Poster Image",
             "thumbnail_time": "Thumbnail Time (seconds)",
+            "source_url": "External video URL",
         }
         help_texts = {
             "title": "",
@@ -60,6 +62,8 @@ class MediaMetadataForm(forms.ModelForm):
             self.fields.pop("thumbnail_time")
         if self.instance.media_type == "image":
             self.fields.pop("uploaded_poster")
+        if not (self.instance.pk and self.instance.is_external):
+            self.fields.pop("source_url", None)
 
         self.fields["new_tags"].initial = ", ".join([tag.title for tag in self.instance.tags.all()])
 
@@ -77,6 +81,8 @@ class MediaMetadataForm(forms.ModelForm):
             CustomField('description'),
             CustomField('enable_comments'),
         ]
+        if self.instance.pk and self.instance.is_external:
+            layout_fields.insert(1, CustomField('source_url'))
         if self.instance.media_type != "image":
             layout_fields.append(CustomField('uploaded_poster'))
 

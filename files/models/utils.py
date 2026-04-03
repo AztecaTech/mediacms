@@ -21,6 +21,12 @@ MEDIA_STATES = (
     ("unlisted", "Unlisted"),
 )
 
+# source type for Media - local upload or external embed
+SOURCE_TYPES = (
+    ("local", "Local"),
+    ("external", "External"),
+)
+
 # each uploaded Media gets a media_type hint
 # by helpers.get_file_type
 

@@ -30,13 +30,42 @@ class CommentAdmin(admin.ModelAdmin):
     readonly_fields = ("user", "media", "parent")
 
 
+class ExternalMediaForm(forms.ModelForm):
+    """Custom form for Media admin that makes media_file optional for external videos."""
+
+    class Meta:
+        model = Media
+        fields = '__all__'
+
+    def clean(self):
+        cleaned_data = super().clean()
+        source_url = cleaned_data.get('source_url')
+        media_file = cleaned_data.get('media_file')
+
+        if source_url and media_file:
+            raise ValidationError("Provide either a media file or an external source URL, not both.")
+
+        if not source_url and not media_file:
+            if not (self.instance and self.instance.pk and self.instance.media_file):
+                raise ValidationError("Provide either a media file or an external source URL.")
+
+        if source_url:
+            cleaned_data['source_type'] = 'external'
+        elif not self.instance.pk or not self.instance.source_url:
+            cleaned_data['source_type'] = 'local'
+
+        return cleaned_data
+
+
 class MediaAdmin(admin.ModelAdmin):
+    form = ExternalMediaForm
     search_fields = ["title"]
     list_display = [
         "title",
         "user",
         "add_date",
         "media_type",
+        "source_type",
         "duration",
         "state",
         "is_reviewed",
@@ -44,9 +73,26 @@ class MediaAdmin(admin.ModelAdmin):
         "featured",
         "get_comments_count",
     ]
-    list_filter = ["state", "is_reviewed", "encoding_status", "featured", "category"]
+    list_filter = ["state", "is_reviewed", "encoding_status", "featured", "category", "source_type"]
     ordering = ("-add_date",)
     readonly_fields = ("user", "tags", "category", "channel")
+
+    fieldsets = (
+        (None, {
+            'fields': ('title', 'description', 'media_file', 'user')
+        }),
+        ('External Video', {
+            'fields': ('source_url', 'source_type', 'embed_html'),
+            'classes': ('collapse',),
+            'description': 'For embedding videos from YouTube, Vimeo, etc. Provide a source URL instead of uploading a file.',
+        }),
+        ('Status & Visibility', {
+            'fields': ('state', 'is_reviewed', 'encoding_status', 'featured', 'allow_download', 'enable_comments'),
+        }),
+        ('Metadata', {
+            'fields': ('tags', 'category', 'channel', 'license'),
+        }),
+    )
 
     def get_comments_count(self, obj):
         return obj.comments.count()
@@ -54,10 +100,23 @@ class MediaAdmin(admin.ModelAdmin):
     @admin.action(description="Generate missing encoding(s)", permissions=["change"])
     def generate_missing_encodings(modeladmin, request, queryset):
         for m in queryset:
-            m.encode(force=False)
+            if not m.is_external:
+                m.encode(force=False)
 
     actions = [generate_missing_encodings]
     get_comments_count.short_description = "Comments count"
+
+    def get_readonly_fields(self, request, obj=None):
+        """Allow choosing owner when adding media; keep user read-only on change."""
+        fields = list(self.readonly_fields)
+        if obj is None and "user" in fields:
+            fields.remove("user")
+        return fields
+
+    def save_model(self, request, obj, form, change):
+        if not change and not getattr(obj, "user_id", None):
+            obj.user = request.user
+        super().save_model(request, obj, form, change)
 
 
 class CategoryAdminForm(forms.ModelForm):

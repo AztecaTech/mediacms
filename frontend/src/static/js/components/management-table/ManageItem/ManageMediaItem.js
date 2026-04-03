@@ -200,7 +200,13 @@ export function ManageMediaItem(props) {
         {void 0 === props.media_type ? <i className="non-available">N/A</i> : props.media_type}
       </div>
       <div className="mi-encoding">
-        {void 0 === props.encoding_status ? <i className="non-available">N/A</i> : props.encoding_status}
+        {'external' === props.source_type ? (
+          <i className="non-available">N/A</i>
+        ) : void 0 === props.encoding_status ? (
+          <i className="non-available">N/A</i>
+        ) : (
+          props.encoding_status
+        )}
       </div>
       <div className="mi-state">{void 0 === props.state ? <i className="non-available">N/A</i> : props.state}</div>
       <div className="mi-reviewed">
@@ -245,6 +251,7 @@ ManageMediaItem.propTypes = {
   author_url: PropTypes.string,
   add_date: PropTypes.string,
   media_type: PropTypes.string,
+  source_type: PropTypes.string,
   encoding_status: PropTypes.string,
   state: PropTypes.string,
   is_reviewed: PropTypes.bool,
