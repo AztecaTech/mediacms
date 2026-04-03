@@ -34,6 +34,9 @@ export default function ExternalVideoEmbed({ sourceUrl, embedHtml, containerStyl
                     <iframe
                         src={embedUrl}
                         style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
                             width: '100%',
                             height: '100%',
                             border: 'none',
@@ -49,11 +52,9 @@ export default function ExternalVideoEmbed({ sourceUrl, embedHtml, containerStyl
 
     if (embedHtml) {
         return (
-            <div
-                className="player-container external-video-container"
-                style={containerStyles}
-                dangerouslySetInnerHTML={{ __html: embedHtml }}
-            />
+            <div className="player-container external-video-container" style={containerStyles}>
+                <div className="player-container-inner" dangerouslySetInnerHTML={{ __html: embedHtml }} />
+            </div>
         );
     }
 
