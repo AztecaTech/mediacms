@@ -8,7 +8,7 @@ function getEmbedUrl(sourceUrl) {
         /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]+)/
     );
     if (ytMatch) {
-        return `https://www.youtube.com/embed/${ytMatch[1]}`;
+        return `https://www.youtube-nocookie.com/embed/${ytMatch[1]}`;
     }
 
     const vimeoMatch = sourceUrl.match(/vimeo\.com\/(\d+)/);
@@ -30,16 +30,10 @@ export default function ExternalVideoEmbed({ sourceUrl, embedHtml, containerStyl
     if (embedUrl) {
         return (
             <div className="player-container external-video-container" style={containerStyles}>
-                <div
-                    className="player-container-inner"
-                    style={{ position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden' }}
-                >
+                <div className="player-container-inner">
                     <iframe
                         src={embedUrl}
                         style={{
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
                             width: '100%',
                             height: '100%',
                             border: 'none',
@@ -65,15 +59,7 @@ export default function ExternalVideoEmbed({ sourceUrl, embedHtml, containerStyl
 
     return (
         <div className="player-container external-video-container" style={containerStyles}>
-            <div
-                style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    height: '100%',
-                    minHeight: '300px',
-                }}
-            >
+            <div className="player-container-inner" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <a href={sourceUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: '1.2em' }}>
                     Open video in new tab
                 </a>

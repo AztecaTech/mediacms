@@ -2391,7 +2391,7 @@ function VideoJSPlayer({ videoId = 'default-video', showTitle = true, showRelate
         const getEmbedUrl = (url) => {
             if (!url) return null;
             const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]+)/);
-            if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}`;
+            if (ytMatch) return `https://www.youtube-nocookie.com/embed/${ytMatch[1]}`;
             const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
             if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
             const dmMatch = url.match(/dailymotion\.com\/video\/([a-zA-Z0-9]+)/);
