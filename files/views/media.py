@@ -25,10 +25,12 @@ from users.models import User
 
 from .. import helpers
 from ..methods import (
+    categories_queryset_for_uploading_user,
     change_media_owner,
     copy_media,
     get_user_or_session,
     is_mediacms_editor,
+    parse_category_uids_from_request,
     show_recommended_media,
     show_related_media,
     update_user_ratings,
@@ -51,7 +53,7 @@ class MediaList(APIView):
     """Media listings views"""
 
     permission_classes = (IsAuthorizedToAdd,)
-    parser_classes = (MultiPartParser, FormParser, FileUploadParser)
+    parser_classes = (JSONParser, MultiPartParser, FormParser, FileUploadParser)
 
     @swagger_auto_schema(
         manual_parameters=[
@@ -257,23 +259,84 @@ class MediaList(APIView):
 
     @swagger_auto_schema(
         manual_parameters=[
-            openapi.Parameter(name="media_file", in_=openapi.IN_FORM, type=openapi.TYPE_FILE, required=True, description="media_file"),
+            openapi.Parameter(name="media_file", in_=openapi.IN_FORM, type=openapi.TYPE_FILE, required=False, description="media_file"),
+            openapi.Parameter(name="source_url", in_=openapi.IN_FORM, type=openapi.TYPE_STRING, required=False, description="External video URL (YouTube, Vimeo, etc.)"),
             openapi.Parameter(name="description", in_=openapi.IN_FORM, type=openapi.TYPE_STRING, required=False, description="description"),
             openapi.Parameter(name="title", in_=openapi.IN_FORM, type=openapi.TYPE_STRING, required=False, description="title"),
+            openapi.Parameter(
+                name="category_uids",
+                in_=openapi.IN_FORM,
+                type=openapi.TYPE_STRING,
+                required=False,
+                description="Optional: category UID(s). Use repeated keys in multipart, or JSON array string.",
+            ),
+            openapi.Parameter(
+                name="uploaded_poster",
+                in_=openapi.IN_FORM,
+                type=openapi.TYPE_FILE,
+                required=False,
+                description="Optional poster/thumbnail image (e.g. for external video)",
+            ),
         ],
         tags=['Media'],
         operation_summary='Add new Media',
-        operation_description='Adds a new media, for authenticated users',
-        responses={201: openapi.Response('response description', MediaSerializer), 401: 'bad request'},
+        operation_description='Adds a new media. Provide either media_file (upload) or source_url (external video), not both. Optional category_uids and uploaded_poster.',
+        responses={201: openapi.Response('response description', MediaSerializer), 400: 'bad request', 401: 'unauthorized'},
     )
     def post(self, request, format=None):
-        # Add new media
+        source_url = request.data.get("source_url")
+        media_file = request.data.get("media_file")
+
+        if source_url and media_file:
+            return Response(
+                {"detail": "Provide either media_file or source_url, not both."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not source_url and not media_file:
+            return Response(
+                {"detail": "Provide either media_file or source_url."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        category_uids = parse_category_uids_from_request(request)
+        allowed_categories = None
+        if category_uids:
+            unique_requested = list(dict.fromkeys(category_uids))
+            allowed_categories = categories_queryset_for_uploading_user(request.user).filter(uid__in=unique_requested)
+            found_uids = set(allowed_categories.values_list("uid", flat=True))
+            if set(unique_requested) != found_uids:
+                return Response(
+                    {"detail": "One or more category_uids are invalid or not permitted for this user."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        uploaded_poster = None
+        if getattr(request, "FILES", None):
+            uploaded_poster = request.FILES.get("uploaded_poster")
 
         serializer = MediaSerializer(data=request.data, context={"request": request})
         if serializer.is_valid():
-            media_file = request.data["media_file"]
-            serializer.save(user=request.user, media_file=media_file)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            if source_url:
+                instance = serializer.save(
+                    user=request.user,
+                    source_url=source_url,
+                    source_type="external",
+                    media_type="video",
+                    encoding_status="success",
+                )
+            else:
+                instance = serializer.save(user=request.user, media_file=media_file)
+
+            if allowed_categories is not None:
+                instance.category.set(allowed_categories)
+
+            if uploaded_poster:
+                instance.uploaded_poster = uploaded_poster
+                instance.save()
+
+            out = MediaSerializer(instance, context={"request": request})
+            return Response(out.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 

@@ -22,6 +22,7 @@ from users.models import User
 
 from .backends import FFmpegBackend
 from .exceptions import VideoEncodingError
+from .external_utils import download_thumbnail, fetch_oembed, get_embed_url
 from .helpers import (
     calculate_seconds,
     create_temp_file,
@@ -135,6 +136,8 @@ def chunkize_media(self, friendly_token, profiles, force=True):
 
     profiles = [EncodeProfile.objects.get(id=profile) for profile in profiles]
     media = Media.objects.get(friendly_token=friendly_token)
+    if media.is_external or not media.media_file:
+        return False
     cwd = os.path.dirname(os.path.realpath(media.media_file.path))
     file_name = media.media_file.path.split("/")[-1]
     random_prefix = produce_friendly_token()
@@ -269,6 +272,10 @@ def encode_media(
         media = Media.objects.get(friendly_token=friendly_token)
         profile = EncodeProfile.objects.get(id=profile_id)
     except BaseException:
+        Encoding.objects.filter(id=encoding_id).delete()
+        return False
+
+    if media.is_external or not media.media_file:
         Encoding.objects.filter(id=encoding_id).delete()
         return False
 
@@ -549,6 +556,9 @@ def produce_sprite_from_video(friendly_token):
         logger.info(f"failed to get media with friendly_token {friendly_token}")
         return False
 
+    if media.is_external or not media.media_file:
+        return False
+
     with tempfile.TemporaryDirectory(dir=settings.TEMP_DIRECTORY) as tmpdirname:
         try:
             tmpdir_image_files = tmpdirname + "/img%03d.jpg"
@@ -593,6 +603,9 @@ def create_hls(friendly_token):
         logger.info(f"failed to get media with friendly_token {friendly_token}")
         return False
 
+    if media.is_external:
+        return False
+
     p = media.uid.hex
     output_dir = os.path.join(settings.HLS_DIR, p)
     encodings = media.encodings.filter(profile__extension="mp4", status="success", chunk=False, profile__codec="h264")
@@ -633,6 +646,62 @@ def media_init(friendly_token):
         logger.info("failed to get media with friendly_token %s" % friendly_token)
         return False
     media.media_init()
+
+    return True
+
+
+@task(name="fetch_external_metadata", queue="short_tasks")
+def fetch_external_metadata(friendly_token):
+    """Fetch metadata from oEmbed for external videos.
+
+    Populates title (if empty), thumbnail, poster, embed_html, and duration.
+    """
+    try:
+        media = Media.objects.get(friendly_token=friendly_token)
+    except Media.DoesNotExist:
+        logger.info("fetch_external_metadata: media not found for %s", friendly_token)
+        return False
+
+    if not media.is_external or not media.source_url:
+        return False
+
+    oembed_data = fetch_oembed(media.source_url)
+
+    update_fields = []
+
+    if (not media.title or media.title == "Untitled") and oembed_data.get("title"):
+        media.title = oembed_data["title"][:100]
+        update_fields.append("title")
+
+    if oembed_data.get("duration") and not media.duration:
+        media.duration = int(oembed_data["duration"])
+        update_fields.append("duration")
+
+    embed_url = get_embed_url(media.source_url)
+    if not embed_url and oembed_data.get("html"):
+        media.embed_html = oembed_data["html"]
+        update_fields.append("embed_html")
+
+    thumbnail_url = oembed_data.get("thumbnail_url")
+    if thumbnail_url:
+        image_data, content_type = download_thumbnail(thumbnail_url)
+        if image_data:
+            ext = "jpg" if "jpeg" in (content_type or "") or "jpg" in (content_type or "") else "jpg"
+            filename = f"{media.uid.hex}_external.{ext}"
+            from django.core.files.base import ContentFile
+
+            try:
+                media.thumbnail.save(filename, ContentFile(image_data), save=False)
+                update_fields.append("thumbnail")
+                media.poster.save(filename, ContentFile(image_data), save=False)
+                update_fields.append("poster")
+            except OSError as e:
+                logger.warning("Failed to save thumbnail for %s: %s", friendly_token, e)
+
+    if update_fields:
+        media.save(update_fields=update_fields)
+
+    media.update_search_vector()
 
     return True
 

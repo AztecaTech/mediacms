@@ -12,6 +12,7 @@ import {
 } from './functions';
 // import { VideoPlayer, VideoPlayerError } from '../../video-player/VideoPlayer';
 import VideoJSEmbed from '../../VideoJS/VideoJSEmbed';
+import ExternalVideoEmbed from '../ExternalVideoEmbed';
 
 function filterVideoEncoding(encoding_status) {
     switch (encoding_status) {
@@ -42,6 +43,13 @@ export default class VideoViewer extends React.PureComponent {
         };
 
         this.videoSources = [];
+
+        if (this.props.data.source_type === 'external') {
+            this.state.displayPlayer = true;
+            this.isExternal = true;
+            return;
+        }
+        this.isExternal = false;
 
         filterVideoEncoding(this.props.data.encoding_status);
 
@@ -344,6 +352,16 @@ export default class VideoViewer extends React.PureComponent {
     }
 
     render() {
+        if (this.isExternal) {
+            return (
+                <ExternalVideoEmbed
+                    sourceUrl={this.props.data.source_url}
+                    embedHtml={this.props.data.embed_html}
+                    containerStyles={this.props.containerStyles}
+                />
+            );
+        }
+
         let nextLink = null;
         let previousLink = null;
 

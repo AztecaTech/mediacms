@@ -783,10 +783,12 @@ In `files/views/media.py`, replace the `post` method (lines 258-277) with:
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 ```
 
+**Extension (design spec §4 — upload workflow):** The implemented `POST` also accepts optional **`category_uids`** (repeated form keys or JSON list string) and optional **`uploaded_poster`** (image file), validated with `categories_queryset_for_uploading_user` and `parse_category_uids_from_request` in `files/methods.py`. Responses use a fresh `MediaSerializer` after M2M/poster updates.
+
 - [ ] **Step 2: Commit**
 
 ```bash
-git add files/views/media.py
+git add files/views/media.py files/methods.py
 git commit -m "feat: accept source_url in media API for external videos"
 ```
 
@@ -1086,20 +1088,20 @@ This task confirms the data flow is correct. No commit needed.
 
 ## Task 12: Update Upload Page with External Video Tab
 
-**Files:**
-- Modify: `frontend/src/static/js/pages/ProfileMediaPage.js` (upload section)
+**Files (as implemented in MediaCMS):**
+- Modify: `templates/cms/add-media.html` — primary Django upload view (`upload_media`)
+- Modify: `files/views/pages.py` — pass `external_upload_categories` for the category multiselect
+- Modify: `frontend/config/templates/htmlBodySnippetAddMediaPage.ejs` — SPA dev upload page (loads categories via `GET /api/v1/categories`)
 
-NOTE: The upload page uses the Fine Uploader library for chunked uploads. The external video form is simpler — it's a standard form that POSTs to the API.
+NOTE: The upload page uses the Fine Uploader library for chunked uploads. The external video form POSTs as `multipart/form-data` to `/api/v1/media` (supports optional `category_uids` and `uploaded_poster`).
 
 - [ ] **Step 1: Locate the upload UI section**
 
-Read `frontend/src/static/js/pages/ProfileMediaPage.js` to find where the upload widget is rendered. Look for the Fine Uploader integration and the surrounding container.
+The Fine Uploader integration lives in `templates/cms/add-media.html` (production) and `htmlBodySnippetAddMediaPage.ejs` (frontend bundle).
 
 - [ ] **Step 2: Add external video form**
 
-After the existing upload widget section, add a tabbed interface. The exact implementation depends on the existing upload UI structure (which uses Fine Uploader, a third-party library). 
-
-Add an "External Video" tab/section with a form containing:
+Add a tabbed interface with an "External Video" section containing:
 - URL input field (required)
 - Title input field (optional)  
 - Description textarea (optional)
@@ -1107,44 +1109,18 @@ Add an "External Video" tab/section with a form containing:
 - Thumbnail file input (optional, for manual override)
 - Submit button
 
-On submit, POST to `/api/v1/media` with `source_url` instead of `media_file`:
+On submit, POST to `/api/v1/media` with `FormData`: `source_url`, optional `title`, `description`, repeated `category_uids`, optional file `uploaded_poster`. Use `X-CSRFToken` and session cookies (`credentials: 'same-origin'`). On success, redirect to `data.url`.
 
-```javascript
-// Example submit handler for external video form
-async function handleExternalVideoSubmit(formData) {
-    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value 
-        || document.cookie.match(/csrftoken=([^;]+)/)?.[1];
-    
-    const response = await fetch('/api/v1/media', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrfToken,
-        },
-        body: JSON.stringify({
-            source_url: formData.url,
-            title: formData.title || '',
-            description: formData.description || '',
-        }),
-    });
-    
-    if (response.ok) {
-        const data = await response.json();
-        window.location.href = data.url;
-    }
-}
-```
-
-NOTE: The exact React component structure should follow the patterns in `ProfileMediaPage.js`. Read the file fully before implementing. The key points are:
-1. Add a toggle between "Upload" and "External Video" modes
-2. The external video form is a simple HTML form, not a chunked uploader
+The key points are:
+1. Toggle between "Upload file" and "External video" modes
+2. External flow uses `fetch` + `FormData`, not Fine Uploader
 3. On success, redirect to the new media page
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add frontend/src/static/js/pages/ProfileMediaPage.js
-git commit -m "feat: add external video form to upload page"
+git add templates/cms/add-media.html files/views/pages.py frontend/config/templates/htmlBodySnippetAddMediaPage.ejs
+git commit -m "feat: add external video form to upload pages"
 ```
 
 ---
@@ -1463,6 +1439,8 @@ git commit -m "build: compile frontend with external video embed support"
 
 This task is a manual verification checklist. Run the Django dev server and test each scenario.
 
+**Code audit (pre-flight):** `MediaAdmin` now makes **User** editable on add and defaults `user` to the logged-in staff user if left blank, so admin “Add media” works for external entries. Download on the media page is gated by `allow_download` in `ViewerInfoTitleBanner` / `ViewerInfo` (external media forces `allow_download=False` in `Media.save`). JSON `POST /api/v1/media` is valid because `MediaList` includes `JSONParser` and DRF enables `TokenAuthentication`. **Step 6** requires a running **Celery worker** (and broker); `fetch_external_metadata` is queued from `media_init()` for external media.
+
 - [ ] **Step 1: Start the server**
 
 ```bash
@@ -1470,16 +1448,19 @@ cd /c/Users/Ivan/Documents/GitHub/mediacms
 python manage.py runserver
 ```
 
+(Optional for Step 6: start Celery worker in another terminal.)
+
 - [ ] **Step 2: Test via Django Admin**
 
 1. Go to `/admin/files/media/add/`
 2. Expand the "External Video" section
 3. Enter a YouTube URL in `source_url` (e.g., `https://www.youtube.com/watch?v=dQw4w9WgXcQ`)
-4. Set `source_type` to "External"
-5. Enter a title
-6. Save
-7. Verify: encoding_status is "success", media_type is "video"
-8. Verify: the media appears in listings
+4. `source_type` is set automatically to **External** when `source_url` is set (you can still set it explicitly)
+5. Enter a title; choose **User** if not the default (defaults to you when saved)
+6. Leave **media file** empty
+7. Save
+8. Verify: encoding_status is "success", media_type is "video"
+9. Verify: the media appears in listings (if state/public + reviewed + listable rules allow)
 
 - [ ] **Step 3: Test video playback**
 
@@ -1490,32 +1471,36 @@ python manage.py runserver
 
 - [ ] **Step 4: Test API endpoint**
 
+Use a real API token from a user allowed to upload (`CAN_ADD_MEDIA`, limits, etc.):
+
 ```bash
 curl -X POST http://localhost:8000/api/v1/media \
   -H "Content-Type: application/json" \
-  -H "Authorization: Token YOUR_TOKEN" \
-  -d '{"source_url": "https://vimeo.com/123456789", "title": "Test Vimeo"}'
+  -H "Authorization: Token YOUR_TOKEN_HERE" \
+  -d "{\"source_url\": \"https://vimeo.com/123456789\", \"title\": \"Test Vimeo\"}"
 ```
 
-Verify: Returns 201 with media data including `source_type: "external"`.
+Or session auth from the browser (e.g. upload page / devtools) with `multipart/form-data` and `X-CSRFToken`.
+
+Verify: Returns **201** with JSON including `"source_type": "external"`.
 
 - [ ] **Step 5: Test RBAC access control**
 
 1. Create an RBAC group in admin
 2. Assign a category to the group
-3. Assign the external video to that category
+3. Put the external video in that category using a path your site actually supports: e.g. **Add external video** category multiselect on `add-media`, **`POST /api/v1/media/user/bulk_actions`** with `add_to_category` / `category_uids`, or the **Publish media** / edit UI if it sets categories. (Default `MediaAdmin` keeps **category** / **tags** read-only on the change form, so you typically do not assign them there.)
 4. Add a test user as a member
 5. Log in as the test user
-6. Verify: the video is visible
+6. Verify: the video is visible where RBAC allows
 7. Log in as a different user (not in the group)
-8. Verify: the video is NOT visible (if category is RBAC-controlled)
+8. Verify: the video is NOT visible (if category is RBAC-controlled and portal rules hide it)
 
 - [ ] **Step 6: Test oEmbed metadata fetching**
 
-1. Add an external video with no title
+1. Add an external video with no title (admin or API)
 2. Wait for the Celery task to complete (check Celery logs)
-3. Verify: title was auto-populated from oEmbed
-4. Verify: thumbnail was downloaded and saved
+3. Verify: title was auto-populated from oEmbed (or remains **Untitled** if oEmbed failed — still valid)
+4. Verify: thumbnail/poster were saved when oEmbed returned `thumbnail_url`
 
 - [ ] **Step 7: Final commit**
 

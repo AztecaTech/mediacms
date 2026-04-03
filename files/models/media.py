@@ -29,6 +29,7 @@ from .utils import (
     MEDIA_ENCODING_STATUS,
     MEDIA_STATES,
     MEDIA_TYPES_SUPPORTED,
+    SOURCE_TYPES,
     original_media_file_path,
     original_thumbnail_file_path,
 )
@@ -93,10 +94,32 @@ class Media(models.Model):
         "media file",
         upload_to=original_media_file_path,
         max_length=500,
+        blank=True,
+        null=True,
         help_text="media file",
     )
 
     media_info = models.TextField(blank=True, help_text="extracted media metadata info")
+
+    source_url = models.URLField(
+        max_length=500,
+        blank=True,
+        null=True,
+        help_text="URL of external video (YouTube, Vimeo, etc.)",
+    )
+
+    source_type = models.CharField(
+        max_length=20,
+        choices=SOURCE_TYPES,
+        default="local",
+        help_text="Whether media is a local upload or external embed",
+    )
+
+    embed_html = models.TextField(
+        blank=True,
+        default="",
+        help_text="Cached oEmbed HTML for platforms without known embed URL patterns",
+    )
 
     media_type = models.CharField(
         max_length=20,
@@ -225,6 +248,10 @@ class Media(models.Model):
     def __str__(self):
         return self.title
 
+    @property
+    def is_external(self):
+        return self.source_type == "external"
+
     def __init__(self, *args, **kwargs):
         super(Media, self).__init__(*args, **kwargs)
         # keep track if media file has changed, on saves
@@ -240,7 +267,10 @@ class Media(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.title:
-            self.title = self.media_file.path.split("/")[-1]
+            if self.media_file:
+                self.title = self.media_file.path.split("/")[-1]
+            else:
+                self.title = "Untitled"
 
         strip_text_items = ["title", "description"]
         for item in strip_text_items:
@@ -267,7 +297,7 @@ class Media(models.Model):
             # media exists
 
             # check case where another media file was uploaded
-            if self.media_file != self.__original_media_file:
+            if self.media_file and self.media_file != self.__original_media_file:
                 # set this otherwise gets to infinite loop
                 self.__original_media_file = self.media_file
                 from .. import tasks
@@ -302,6 +332,9 @@ class Media(models.Model):
             self.listable = True
         else:
             self.listable = False
+
+        if self.is_external:
+            self.allow_download = False
 
         super(Media, self).save(*args, **kwargs)
 
@@ -385,6 +418,15 @@ class Media(models.Model):
         Performs all related tasks, as check for media type,
         video duration, encode
         """
+        if self.is_external:
+            # External videos skip the entire encoding pipeline
+            self.media_type = "video"
+            self.encoding_status = "success"
+            self.save(update_fields=["media_type", "encoding_status"])
+            from ..tasks import fetch_external_metadata
+            fetch_external_metadata.delay(self.friendly_token)
+            return True
+
         self.set_media_type()
         from ..methods import is_media_allowed_type
 
@@ -484,6 +526,8 @@ class Media(models.Model):
         For image save thumbnail and poster, this will perform
         resize action
         """
+        if self.is_external:
+            return False
         if force or (not self.thumbnail):
             if self.media_type == "video":
                 self.produce_thumbnails_from_video()
@@ -542,6 +586,8 @@ class Media(models.Model):
         """Start a task that will produce a sprite file
         To be used on the video player
         """
+        if self.is_external:
+            return False
 
         from .. import tasks
 
@@ -554,6 +600,8 @@ class Media(models.Model):
         so that no EncodeProfile for highter heights than the video
         are created
         """
+        if self.is_external:
+            return False
 
         if not profiles:
             profiles = EncodeProfile.objects.filter(active=True)
@@ -650,6 +698,8 @@ class Media(models.Model):
     def trim_video_url(self):
         if self.media_type not in ["video", "audio"]:
             return None
+        if self.is_external:
+            return None
 
         ret = self.encodings.filter(status="success", profile__extension='mp4', chunk=False).order_by("-profile__resolution").first()
         if ret:
@@ -662,6 +712,8 @@ class Media(models.Model):
     def trim_video_path(self):
         if self.media_type not in ["video", "audio"]:
             return None
+        if self.is_external:
+            return None
 
         ret = self.encodings.filter(status="success", profile__extension='mp4', chunk=False).order_by("-profile__resolution").first()
         if ret:
@@ -672,6 +724,9 @@ class Media(models.Model):
     @property
     def encodings_info(self, full=False):
         """Property used on serializers"""
+
+        if self.is_external:
+            return {}
 
         ret = {}
 
@@ -761,6 +816,8 @@ class Media(models.Model):
     def original_media_url(self):
         """Property used on serializers"""
 
+        if self.is_external:
+            return self.source_url
         if settings.SHOW_ORIGINAL_MEDIA:
             return helpers.url_from_path(self.media_file.path)
         else:
@@ -861,6 +918,8 @@ class Media(models.Model):
         """Property used on serializers
         Returns preview url
         """
+        if self.is_external:
+            return ""
 
         if self.preview_file_path:
             return helpers.url_from_path(self.preview_file_path)
@@ -877,6 +936,8 @@ class Media(models.Model):
         """Property used on serializers
         Returns hls info, curated to be read by video.js
         """
+        if self.is_external:
+            return {}
 
         res = {}
         valid_resolutions = [144, 240, 360, 480, 720, 1080, 1440, 2160]

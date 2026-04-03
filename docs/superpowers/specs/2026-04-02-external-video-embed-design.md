@@ -174,7 +174,7 @@ When `source_type == "external"`:
 | Django admin | `files/admin.py` |
 | Upload forms | `files/forms.py`, `uploader/views.py` |
 | Frontend player | `frontend/src/static/js/components/media-viewer/VideoViewer/` |
-| Upload page | `frontend/src/static/js/pages/` (upload component) |
+| Upload page | `templates/cms/add-media.html` (Django); `frontend/config/templates/htmlBodySnippetAddMediaPage.ejs` (SPA dev) |
 | Post-save signal | `files/models/media.py` (signal handlers) |
 | Post-delete signal | `files/models/media.py` (file cleanup) |
 | Migration | `files/migrations/` (new migration for model fields) |
