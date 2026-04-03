@@ -8,7 +8,7 @@ function getEmbedUrl(sourceUrl) {
         /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]+)/
     );
     if (ytMatch) {
-        return `https://www.youtube-nocookie.com/embed/${ytMatch[1]}`;
+        return `https://www.youtube.com/embed/${ytMatch[1]}?rel=0&origin=${encodeURIComponent(window.location.origin)}`;
     }
 
     const vimeoMatch = sourceUrl.match(/vimeo\.com\/(\d+)/);
