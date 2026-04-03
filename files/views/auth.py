@@ -37,6 +37,9 @@ def custom_login_view(request):
         return redirect(reverse('login_system'))
 
     login_options = []
-    for option in LoginOption.objects.filter(active=True):
-        login_options.append({'url': option.url, 'title': option.title})
+    try:
+        for option in LoginOption.objects.filter(active=True):
+            login_options.append({'url': option.url, 'title': option.title})
+    except Exception:
+        pass
     return render(request, 'account/custom_login_selector.html', {'login_options': login_options})
