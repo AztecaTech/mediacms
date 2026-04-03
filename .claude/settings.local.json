@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run:*)",
+      "Bash(cp -r \"C:\\\\Users\\\\Ivan\\\\Documents\\\\GitHub\\\\mediacms\\\\frontend\\\\dist\\\\static\\\\js\"/* \"C:\\\\Users\\\\Ivan\\\\Documents\\\\GitHub\\\\mediacms\\\\static\\\\js/\")",
+      "Bash(cp -r \"C:\\\\Users\\\\Ivan\\\\Documents\\\\GitHub\\\\mediacms\\\\frontend\\\\dist\\\\static\\\\css\"/* \"C:\\\\Users\\\\Ivan\\\\Documents\\\\GitHub\\\\mediacms\\\\static\\\\css/\")"
+    ]
+  }
+}
