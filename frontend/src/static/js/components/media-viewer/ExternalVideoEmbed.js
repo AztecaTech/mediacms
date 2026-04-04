@@ -8,7 +8,7 @@ function getEmbedUrl(sourceUrl) {
         /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]+)/
     );
     if (ytMatch) {
-        return `https://www.youtube.com/embed/${ytMatch[1]}?rel=0&origin=${encodeURIComponent(window.location.origin)}`;
+        return `https://www.youtube.com/embed/${ytMatch[1]}`;
     }
 
     const vimeoMatch = sourceUrl.match(/vimeo\.com\/(\d+)/);
@@ -52,7 +52,8 @@ export default function ExternalVideoEmbed({ sourceUrl, embedHtml }) {
                 <iframe
                     src={embedUrl}
                     style={iframeStyle}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    referrerPolicy="strict-origin-when-cross-origin"
                     allowFullScreen
                     title="External video"
                 />
