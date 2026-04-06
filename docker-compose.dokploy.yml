@@ -109,6 +109,23 @@ services:
       POSTGRES_PORT: "5432"
       REDIS_LOCATION: redis://redis:6379/1
       DEBUG: "False"
+      # SMTP / email — read by deploy/docker/local_settings.py.
+      # EMAIL_* are the canonical names; SMTP_*/MAIL_FROM are accepted as aliases.
+      EMAIL_HOST: ${EMAIL_HOST:-}
+      EMAIL_PORT: ${EMAIL_PORT:-}
+      EMAIL_HOST_USER: ${EMAIL_HOST_USER:-}
+      EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD:-}
+      EMAIL_USE_TLS: ${EMAIL_USE_TLS:-True}
+      EMAIL_USE_SSL: ${EMAIL_USE_SSL:-False}
+      DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL:-}
+      SERVER_EMAIL: ${SERVER_EMAIL:-}
+      ADMIN_EMAIL_LIST: ${ADMIN_EMAIL_LIST:-}
+      EMAIL_BACKEND: ${EMAIL_BACKEND:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      MAIL_FROM: ${MAIL_FROM:-}
     volumes:
       - mediacms_media:/home/mediacms.io/mediacms/media_files
     depends_on:
@@ -166,6 +183,23 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mediacms}
       POSTGRES_PORT: "5432"
       REDIS_LOCATION: redis://redis:6379/1
+      # SMTP / email — celery_worker is the process that actually opens the SMTP
+      # connection (CeleryEmailBackend), so it MUST receive these vars.
+      EMAIL_HOST: ${EMAIL_HOST:-}
+      EMAIL_PORT: ${EMAIL_PORT:-}
+      EMAIL_HOST_USER: ${EMAIL_HOST_USER:-}
+      EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD:-}
+      EMAIL_USE_TLS: ${EMAIL_USE_TLS:-True}
+      EMAIL_USE_SSL: ${EMAIL_USE_SSL:-False}
+      DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL:-}
+      SERVER_EMAIL: ${SERVER_EMAIL:-}
+      ADMIN_EMAIL_LIST: ${ADMIN_EMAIL_LIST:-}
+      EMAIL_BACKEND: ${EMAIL_BACKEND:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      MAIL_FROM: ${MAIL_FROM:-}
     volumes:
       - mediacms_media:/home/mediacms.io/mediacms/media_files
     depends_on:
