@@ -28,7 +28,10 @@
 
 services:
   db:
-    image: postgres:17.2-alpine
+    # Use a moving 17.x Alpine tag so pulls succeed on more registries/mirrors; force pull
+    # so `compose up --build` does not fail with "No such image" when only app images build.
+    image: postgres:17-alpine
+    pull_policy: always
     restart: unless-stopped
     volumes:
       - mediacms_pgdata:/var/lib/postgresql/data
@@ -44,6 +47,7 @@ services:
 
   redis:
     image: redis:7-alpine
+    pull_policy: always
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
