@@ -23,9 +23,11 @@ PLATFORM_PATTERNS = {
     ),
     "vimeo": re.compile(r"(?:https?://)?(?:www\.)?vimeo\.com/(\d+)"),
     "dailymotion": re.compile(r"(?:https?://)?(?:www\.)?dailymotion\.com/video/([a-zA-Z0-9]+)"),
-    # /file/d/{id}/view|preview|edit or drive.google.com/open?id=
+    # file/d/, file/u/N/d/, drive/u/N/file/d/, open?id=, uc?id=
     "googledrive": re.compile(
-        r"(?:https?://)?(?:www\.)?(?:drive|docs)\.google\.com/(?:file/d/|open\?(?:[^#]*&)?id=)([a-zA-Z0-9_-]+)"
+        r"(?:https?://)?(?:www\.)?(?:drive|docs)\.google\.com(?:/a/[^/]+)?/"
+        r"(?:(?:drive/(?:u/\d+/)?)?file/d/|file/(?:u/\d+/)?d/|open\?(?:[^#]*&)?id=|uc\?(?:[^#]*&)?id=)"
+        r"([a-zA-Z0-9_-]+)"
     ),
 }
 

@@ -2389,15 +2389,16 @@ function VideoJSPlayer({ videoId = 'default-video', showTitle = true, showRelate
 
         // Convert watch URLs to embed URLs for known platforms
         const getEmbedUrl = (url) => {
-            if (!url) return null;
-            const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]+)/);
+            const u = typeof url === 'string' ? url.trim() : '';
+            if (!u) return null;
+            const ytMatch = u.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]+)/);
             if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}`;
-            const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+            const vimeoMatch = u.match(/vimeo\.com\/(\d+)/);
             if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
-            const dmMatch = url.match(/dailymotion\.com\/video\/([a-zA-Z0-9]+)/);
+            const dmMatch = u.match(/dailymotion\.com\/video\/([a-zA-Z0-9]+)/);
             if (dmMatch) return `https://www.dailymotion.com/embed/video/${dmMatch[1]}`;
-            const driveMatch = url.match(
-                /(?:drive|docs)\.google\.com\/(?:file\/d\/|open\?(?:[^#]*&)?id=)([a-zA-Z0-9_-]+)/
+            const driveMatch = u.match(
+                /(?:drive|docs)\.google\.com(?:\/a\/[^/]+)?\/(?:(?:drive\/(?:u\/\d+\/)?)?file\/d\/|file\/(?:u\/\d+\/)?d\/|open\?(?:[^#]*&)?id=|uc\?(?:[^#]*&)?id=)([a-zA-Z0-9_-]+)/
             );
             if (driveMatch) return `https://drive.google.com/file/d/${driveMatch[1]}/preview`;
             return null;
@@ -2411,7 +2412,9 @@ function VideoJSPlayer({ videoId = 'default-video', showTitle = true, showRelate
             u.includes('/preview');
         const isGoogleDriveSource = (u) =>
             typeof u === 'string' &&
-            /(?:drive|docs)\.google\.com\/(?:file\/d\/|open\?(?:[^#]*&)?id=)/.test(u);
+            /(?:drive|docs)\.google\.com(?:\/a\/[^/]+)?\/(?:(?:drive\/(?:u\/\d+\/)?)?file\/d\/|file\/(?:u\/\d+\/)?d\/|open\?(?:[^#]*&)?id=|uc\?(?:[^#]*&)?id=)/.test(
+                u.trim()
+            );
         const blockDriveFullscreen = isGoogleDriveFilePreview(embedUrl);
         const toolbarShieldStyle = {
             position: 'absolute',

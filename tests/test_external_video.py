@@ -55,6 +55,34 @@ class DetectPlatformTests(TestCase):
         self.assertEqual(platform, "googledrive")
         self.assertEqual(video_id, "1OpenIdTest_-abc")
 
+    def test_google_drive_file_u0_d_url(self):
+        platform, video_id = detect_platform(
+            "https://drive.google.com/file/u/0/d/1MultiAccountPath/view?usp=sharing"
+        )
+        self.assertEqual(platform, "googledrive")
+        self.assertEqual(video_id, "1MultiAccountPath")
+
+    def test_google_drive_drive_u0_file_d_url(self):
+        platform, video_id = detect_platform(
+            "https://drive.google.com/drive/u/0/file/d/1NestedDrivePath/view"
+        )
+        self.assertEqual(platform, "googledrive")
+        self.assertEqual(video_id, "1NestedDrivePath")
+
+    def test_google_drive_uc_export_url(self):
+        platform, video_id = detect_platform(
+            "https://drive.google.com/uc?export=download&id=1UcExportId"
+        )
+        self.assertEqual(platform, "googledrive")
+        self.assertEqual(video_id, "1UcExportId")
+
+    def test_google_workspace_docs_file_d_url(self):
+        platform, video_id = detect_platform(
+            "https://docs.google.com/a/example.org/file/d/1WorkspaceFile/view"
+        )
+        self.assertEqual(platform, "googledrive")
+        self.assertEqual(video_id, "1WorkspaceFile")
+
     def test_google_docs_file_d_url(self):
         platform, video_id = detect_platform("https://docs.google.com/file/d/1DocLegacyId/view")
         self.assertEqual(platform, "googledrive")

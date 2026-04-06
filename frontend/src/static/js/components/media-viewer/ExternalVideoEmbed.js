@@ -4,33 +4,31 @@ import PropTypes from 'prop-types';
 import ExternalEmbedClickShield, {
     isGoogleDriveFilePreviewEmbed,
 } from './ExternalEmbedClickShield';
+import { getGoogleDrivePreviewEmbedUrl } from '../../utils/googleDriveFromUrl';
 
 function getEmbedUrl(sourceUrl) {
-    if (!sourceUrl) return null;
+    const url = typeof sourceUrl === 'string' ? sourceUrl.trim() : '';
+    if (!url) return null;
 
-    const ytMatch = sourceUrl.match(
+    const ytMatch = url.match(
         /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]+)/
     );
     if (ytMatch) {
         return `https://www.youtube.com/embed/${ytMatch[1]}?modestbranding=1&rel=0&showinfo=0&disablekb=0`;
     }
 
-    const vimeoMatch = sourceUrl.match(/vimeo\.com\/(\d+)/);
+    const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
     if (vimeoMatch) {
         return `https://player.vimeo.com/video/${vimeoMatch[1]}?title=0&byline=0&portrait=0`;
     }
 
-    const dmMatch = sourceUrl.match(/dailymotion\.com\/video\/([a-zA-Z0-9]+)/);
+    const dmMatch = url.match(/dailymotion\.com\/video\/([a-zA-Z0-9]+)/);
     if (dmMatch) {
         return `https://www.dailymotion.com/embed/video/${dmMatch[1]}?ui-logo=0&ui-start-screen-info=0`;
     }
 
-    const driveMatch = sourceUrl.match(
-        /(?:drive|docs)\.google\.com\/(?:file\/d\/|open\?(?:[^#]*&)?id=)([a-zA-Z0-9_-]+)/
-    );
-    if (driveMatch) {
-        return `https://drive.google.com/file/d/${driveMatch[1]}/preview`;
-    }
+    const driveEmbed = getGoogleDrivePreviewEmbedUrl(url);
+    if (driveEmbed) return driveEmbed;
 
     return null;
 }
@@ -39,7 +37,7 @@ export default function ExternalVideoEmbed({ sourceUrl, embedHtml, containerStyl
     const embedUrl = getEmbedUrl(sourceUrl);
     const blockDriveFullscreen = isGoogleDriveFilePreviewEmbed(embedUrl);
 
-    const wrapperStyle = {
+    const baseWrapper = {
         position: 'relative',
         width: '100%',
         paddingBottom: '56.25%',
@@ -47,8 +45,11 @@ export default function ExternalVideoEmbed({ sourceUrl, embedHtml, containerStyl
         overflow: 'hidden',
         background: '#000',
         borderRadius: '10px',
-        ...(containerStyles || {}),
     };
+    const containerRest = { ...(containerStyles || {}) };
+    delete containerRest.height;
+    delete containerRest.paddingBottom;
+    const wrapperStyle = { ...baseWrapper, ...containerRest };
 
     const iframeStyle = {
         position: 'absolute',
