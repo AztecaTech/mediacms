@@ -8,7 +8,9 @@
       "Bash(cp -r /c/Users/Ivan/Documents/GitHub/mediacms/frontend/dist/static/css/* /c/Users/Ivan/Documents/GitHub/mediacms/static/css/)",
       "Bash(npm --version)",
       "Bash(cp -r dist/static/js/* ../static/js/)",
-      "Bash(cp -r dist/static/css/* ../static/css/)"
+      "Bash(cp -r dist/static/css/* ../static/css/)",
+      "Read(//c/Users/Ivan/Documents/GitHub/mediacms/**)",
+      "Bash(python:*)"
     ]
   }
 }

@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# Required for the raw `python -c` calls below — without it, django.setup()
+# raises ImproperlyConfigured, the error gets swallowed by `2>/dev/null`, the
+# checks return "False", and every deploy re-seeds encoding profiles and the
+# default categories fixture (resurrecting deleted Art/Documentary/Film/etc).
+# manage.py / wsgi.py / celery.py set this themselves so they're unaffected.
+export DJANGO_SETTINGS_MODULE="${DJANGO_SETTINGS_MODULE:-cms.settings}"
+
 RANDOM_ADMIN_PASS=`python -c "import secrets;chars = 'abcdefghijklmnopqrstuvwxyz0123456789';print(''.join(secrets.choice(chars) for i in range(10)))"`
 ADMIN_PASSWORD=${ADMIN_PASSWORD:-$RANDOM_ADMIN_PASS}
 
@@ -23,10 +30,17 @@ if [ X"$ENABLE_MIGRATIONS" = X"yes" ]; then
     if [ "$HAS_USER" = "True" ]; then
         echo "Admin user(s) already exist; skipping category fixture and createsuperuser"
     else
-        # Default categories only on first install (encoding fixtures were just loaded).
-        # Set SEED_DEFAULT_CATEGORIES=no to skip even then.
+        # Defense in depth: never reseed if Category already has rows. Protects against
+        # the HAS_USER probe silently returning False (e.g. broken Django bootstrap) and
+        # blowing away the operator's deletions of the default Art/Film/TV/etc rows.
+        HAS_CATEGORIES=$(python -c "import django; django.setup(); from files.models import Category; print('True' if Category.objects.exists() else 'False')" 2>/dev/null || echo "False")
+
+        # Default categories only on first install (encoding fixtures were just loaded
+        # AND no Category rows yet). Set SEED_DEFAULT_CATEGORIES=no to skip even then.
         SEED_CATS="${SEED_DEFAULT_CATEGORIES:-yes}"
-        if [ "$FRESH_ENCODING_SEED" = "1" ] && [ "$SEED_CATS" != "no" ] && [ "$SEED_CATS" != "false" ] && [ "$SEED_CATS" != "0" ]; then
+        if [ "$HAS_CATEGORIES" = "True" ]; then
+            echo "Skipping categories fixture (Category table already populated)"
+        elif [ "$FRESH_ENCODING_SEED" = "1" ] && [ "$SEED_CATS" != "no" ] && [ "$SEED_CATS" != "false" ] && [ "$SEED_CATS" != "0" ]; then
             echo "Loading default categories fixture (first install only)"
             python manage.py loaddata fixtures/categories.json
         elif [ "$FRESH_ENCODING_SEED" != "1" ]; then
