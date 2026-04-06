@@ -10,12 +10,8 @@
     }
 
     .visible-sidebar #page-media & {
-        padding-left: 0;
-    }
-
-    .visible-sidebar & {
-        #page-media {
-            padding-left: 0;
+        @media (min-width: 768px) {
+            padding-left: var(--sidebar-width);
         }
     }
 
