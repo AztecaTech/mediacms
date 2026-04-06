@@ -8,17 +8,17 @@ function getEmbedUrl(sourceUrl) {
         /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]+)/
     );
     if (ytMatch) {
-        return `https://www.youtube.com/embed/${ytMatch[1]}`;
+        return `https://www.youtube.com/embed/${ytMatch[1]}?modestbranding=1&rel=0&showinfo=0&disablekb=0`;
     }
 
     const vimeoMatch = sourceUrl.match(/vimeo\.com\/(\d+)/);
     if (vimeoMatch) {
-        return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+        return `https://player.vimeo.com/video/${vimeoMatch[1]}?title=0&byline=0&portrait=0`;
     }
 
     const dmMatch = sourceUrl.match(/dailymotion\.com\/video\/([a-zA-Z0-9]+)/);
     if (dmMatch) {
-        return `https://www.dailymotion.com/embed/video/${dmMatch[1]}`;
+        return `https://www.dailymotion.com/embed/video/${dmMatch[1]}?ui-logo=0&ui-start-screen-info=0`;
     }
 
     return null;
@@ -69,9 +69,9 @@ export default function ExternalVideoEmbed({ sourceUrl, embedHtml }) {
 
     return (
         <div style={{ ...wrapperStyle, display: 'flex', alignItems: 'center', justifyContent: 'center', paddingBottom: 0, height: '300px' }}>
-            <a href={sourceUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: '1.2em', color: '#fff' }}>
-                Open video in new tab
-            </a>
+            <span style={{ fontSize: '1.2em', color: '#fff' }}>
+                Video unavailable
+            </span>
         </div>
     );
 }
