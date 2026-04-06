@@ -44,3 +44,34 @@ CAN_SEE_MEMBERS_PAGE = "admins"
 # Use PNG logos (SVG files contain old MediaCMS logo)
 PORTAL_LOGO_DARK_SVG = ""
 PORTAL_LOGO_LIGHT_SVG = ""
+
+
+def _env_bool(key, default="False"):
+    return os.getenv(key, default).lower() in ("true", "1", "yes", "on")
+
+
+# SMTP from environment (Dokploy, Railway, etc.). Until EMAIL_HOST is set, Django
+# keeps placeholder values from cms/settings.py — panel env vars alone do nothing.
+_email_host = (os.getenv("EMAIL_HOST") or os.getenv("SMTP_HOST") or "").strip()
+if _email_host:
+    EMAIL_HOST = _email_host
+    _port = os.getenv("EMAIL_PORT") or os.getenv("SMTP_PORT") or "587"
+    EMAIL_PORT = int(_port)
+    EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER") or os.getenv("SMTP_USER") or ""
+    EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD") or os.getenv("SMTP_PASSWORD") or ""
+    EMAIL_USE_TLS = _env_bool("EMAIL_USE_TLS", "True")
+    EMAIL_USE_SSL = _env_bool("EMAIL_USE_SSL", "False")
+    DEFAULT_FROM_EMAIL = (
+        os.getenv("DEFAULT_FROM_EMAIL")
+        or os.getenv("MAIL_FROM")
+        or EMAIL_HOST_USER
+        or "noreply@localhost"
+    )
+    SERVER_EMAIL = os.getenv("SERVER_EMAIL", DEFAULT_FROM_EMAIL)
+    _admin_raw = os.getenv("ADMIN_EMAIL_LIST")
+    if _admin_raw and _admin_raw.strip():
+        ADMIN_EMAIL_LIST = [x.strip() for x in _admin_raw.split(",") if x.strip()]
+
+_backend = os.getenv("EMAIL_BACKEND")
+if _backend:
+    EMAIL_BACKEND = _backend

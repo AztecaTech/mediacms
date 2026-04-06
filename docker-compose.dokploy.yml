@@ -9,6 +9,12 @@
 # Optional:
 #   ADMIN_PASSWORD=...  (else prestart generates one and prints to logs on first install)
 #   HTTP_PUBLISH_PORT=8080  (host port for web; default 8080 — Dokploy/nginx often already uses 80)
+#
+# Email (set on web AND celery_worker — mail is sent via Celery):
+#   EMAIL_HOST, EMAIL_PORT (default 587), EMAIL_HOST_USER, EMAIL_HOST_PASSWORD
+#   EMAIL_USE_TLS=True (default), EMAIL_USE_SSL=False — use SSL for port 465
+#   DEFAULT_FROM_EMAIL, SERVER_EMAIL, ADMIN_EMAIL_LIST=comma@separated@emails
+# Aliases: SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, MAIL_FROM
 
 services:
   db:
