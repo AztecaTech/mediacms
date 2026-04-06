@@ -450,6 +450,9 @@ def edit_chapters(request):
     if not (is_mediacms_editor(request.user) or request.user.has_contributor_access_to_media(media)):
         return HttpResponseRedirect("/")
 
+    if not media.media_file:
+        return HttpResponseRedirect(media.get_absolute_url())
+
     chapters = media.chapter_data
     return render(
         request,

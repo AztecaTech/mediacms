@@ -28,6 +28,10 @@ if [ X"$ENABLE_MIGRATIONS" = X"yes" ]; then
     echo "from django.contrib.sites.models import Site; site, _ = Site.objects.get_or_create(id=1, defaults={'domain': 'localhost', 'name': 'MediaCMS'}); site.domain = '${FRONTEND_HOST}'.replace('https://', '').replace('http://', '').rstrip('/'); site.name = 'MediaCMS'; site.save(); print(f'Site domain set to: {site.domain}')" | python manage.py shell
 fi
 
+# Seed default media assets (volume mount hides files baked into the image)
+mkdir -p /home/mediacms.io/mediacms/media_files/userlogos
+cp -n /home/mediacms.io/mediacms/media_files_defaults/userlogos/* /home/mediacms.io/mediacms/media_files/userlogos/ 2>/dev/null || true
+
 echo "RUNNING COLLECTSTATIC"
 python manage.py collectstatic --noinput
 

@@ -16,6 +16,8 @@ from .models import (
     Media,
     MediaPermission,
     Page,
+    Playlist,
+    PlaylistMedia,
     Subtitle,
     Tag,
     TinyMCEMedia,
@@ -343,6 +345,28 @@ class MediaPermissionAdmin(admin.ModelAdmin):
     readonly_fields = ('created_at',)
 
 
+class PlaylistMediaInline(admin.TabularInline):
+    model = PlaylistMedia
+    extra = 1
+    fields = ('media', 'ordering')
+    raw_id_fields = ('media',)
+    autocomplete_fields = ('media',)
+
+
+class PlaylistAdmin(admin.ModelAdmin):
+    list_display = ['title', 'user', 'media_count', 'add_date']
+    search_fields = ['title']
+    readonly_fields = ('friendly_token', 'add_date')
+    inlines = [PlaylistMediaInline]
+
+    def get_readonly_fields(self, request, obj=None):
+        fields = list(self.readonly_fields)
+        if obj is None:
+            fields = [f for f in fields if f != 'friendly_token']
+        return fields
+
+
+admin.site.register(Playlist, PlaylistAdmin)
 admin.site.register(MediaPermission, MediaPermissionAdmin)
 admin.site.register(EncodeProfile, EncodeProfileAdmin)
 admin.site.register(Comment, CommentAdmin)
