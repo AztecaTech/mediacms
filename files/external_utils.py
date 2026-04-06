@@ -23,6 +23,10 @@ PLATFORM_PATTERNS = {
     ),
     "vimeo": re.compile(r"(?:https?://)?(?:www\.)?vimeo\.com/(\d+)"),
     "dailymotion": re.compile(r"(?:https?://)?(?:www\.)?dailymotion\.com/video/([a-zA-Z0-9]+)"),
+    # /file/d/{id}/view|preview|edit or drive.google.com/open?id=
+    "googledrive": re.compile(
+        r"(?:https?://)?(?:www\.)?(?:drive|docs)\.google\.com/(?:file/d/|open\?(?:[^#]*&)?id=)([a-zA-Z0-9_-]+)"
+    ),
 }
 
 
@@ -51,6 +55,8 @@ def get_embed_url(url):
         return f"https://player.vimeo.com/video/{video_id}"
     elif platform == "dailymotion":
         return f"https://www.dailymotion.com/embed/video/{video_id}"
+    elif platform == "googledrive":
+        return f"https://drive.google.com/file/d/{video_id}/preview"
 
     return None
 

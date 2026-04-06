@@ -1,6 +1,10 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
+import ExternalEmbedClickShield, {
+    isGoogleDriveFilePreviewEmbed,
+} from './ExternalEmbedClickShield';
+
 function getEmbedUrl(sourceUrl) {
     if (!sourceUrl) return null;
 
@@ -21,11 +25,19 @@ function getEmbedUrl(sourceUrl) {
         return `https://www.dailymotion.com/embed/video/${dmMatch[1]}?ui-logo=0&ui-start-screen-info=0`;
     }
 
+    const driveMatch = sourceUrl.match(
+        /(?:drive|docs)\.google\.com\/(?:file\/d\/|open\?(?:[^#]*&)?id=)([a-zA-Z0-9_-]+)/
+    );
+    if (driveMatch) {
+        return `https://drive.google.com/file/d/${driveMatch[1]}/preview`;
+    }
+
     return null;
 }
 
-export default function ExternalVideoEmbed({ sourceUrl, embedHtml }) {
+export default function ExternalVideoEmbed({ sourceUrl, embedHtml, containerStyles }) {
     const embedUrl = getEmbedUrl(sourceUrl);
+    const blockDriveFullscreen = isGoogleDriveFilePreviewEmbed(embedUrl);
 
     const wrapperStyle = {
         position: 'relative',
@@ -35,6 +47,7 @@ export default function ExternalVideoEmbed({ sourceUrl, embedHtml }) {
         overflow: 'hidden',
         background: '#000',
         borderRadius: '10px',
+        ...(containerStyles || {}),
     };
 
     const iframeStyle = {
@@ -48,22 +61,35 @@ export default function ExternalVideoEmbed({ sourceUrl, embedHtml }) {
 
     if (embedUrl) {
         return (
-            <div style={wrapperStyle}>
+            <div
+                style={wrapperStyle}
+                onContextMenu={(e) => e.preventDefault()}
+            >
                 <iframe
                     src={embedUrl}
                     style={iframeStyle}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                     referrerPolicy="strict-origin-when-cross-origin"
-                    allowFullScreen
+                    allowFullScreen={!blockDriveFullscreen}
                     title="External video"
                 />
+                <ExternalEmbedClickShield embedUrl={embedUrl} sourceUrl={sourceUrl} />
             </div>
         );
     }
 
     if (embedHtml) {
         return (
-            <div style={wrapperStyle} dangerouslySetInnerHTML={{ __html: embedHtml }} />
+            <div
+                style={wrapperStyle}
+                onContextMenu={(e) => e.preventDefault()}
+            >
+                <div
+                    style={iframeStyle}
+                    dangerouslySetInnerHTML={{ __html: embedHtml }}
+                />
+                <ExternalEmbedClickShield embedUrl="" sourceUrl={sourceUrl} />
+            </div>
         );
     }
 
@@ -79,8 +105,10 @@ export default function ExternalVideoEmbed({ sourceUrl, embedHtml }) {
 ExternalVideoEmbed.propTypes = {
     sourceUrl: PropTypes.string.isRequired,
     embedHtml: PropTypes.string,
+    containerStyles: PropTypes.object,
 };
 
 ExternalVideoEmbed.defaultProps = {
     embedHtml: '',
+    containerStyles: null,
 };

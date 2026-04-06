@@ -95,7 +95,7 @@ class MediaAdmin(admin.ModelAdmin):
         ('External Video', {
             'fields': ('source_url', 'source_type', 'embed_html'),
             'classes': ('collapse',),
-            'description': 'For embedding videos from YouTube, Vimeo, etc. Provide a source URL instead of uploading a file.',
+            'description': 'For embedding videos from YouTube, Vimeo, Google Drive, etc. Provide a source URL instead of uploading a file.',
         }),
         ('Status & Visibility', {
             'fields': ('state', 'is_reviewed', 'encoding_status', 'featured', 'allow_download', 'enable_comments'),

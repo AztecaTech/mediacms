@@ -2396,14 +2396,40 @@ function VideoJSPlayer({ videoId = 'default-video', showTitle = true, showRelate
             if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
             const dmMatch = url.match(/dailymotion\.com\/video\/([a-zA-Z0-9]+)/);
             if (dmMatch) return `https://www.dailymotion.com/embed/video/${dmMatch[1]}`;
+            const driveMatch = url.match(
+                /(?:drive|docs)\.google\.com\/(?:file\/d\/|open\?(?:[^#]*&)?id=)([a-zA-Z0-9_-]+)/
+            );
+            if (driveMatch) return `https://drive.google.com/file/d/${driveMatch[1]}/preview`;
             return null;
         };
 
         const embedUrl = getEmbedUrl(sourceUrl);
 
+        const isGoogleDriveFilePreview = (u) =>
+            typeof u === 'string' &&
+            u.includes('drive.google.com/file/d/') &&
+            u.includes('/preview');
+        const isGoogleDriveSource = (u) =>
+            typeof u === 'string' &&
+            /(?:drive|docs)\.google\.com\/(?:file\/d\/|open\?(?:[^#]*&)?id=)/.test(u);
+        const blockDriveFullscreen = isGoogleDriveFilePreview(embedUrl);
+        const toolbarShieldStyle = {
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: isGoogleDriveFilePreview(embedUrl) || isGoogleDriveSource(sourceUrl) ? '5.75rem' : '3.75rem',
+            zIndex: 2,
+            pointerEvents: 'auto',
+            background: 'transparent',
+        };
+
         if (embedUrl) {
             return (
-                <div className="player-container external-video-container">
+                <div
+                    className="player-container external-video-container"
+                    onContextMenu={(e) => e.preventDefault()}
+                >
                     <div className="player-container-inner">
                         <iframe
                             src={embedUrl}
@@ -2417,9 +2443,10 @@ function VideoJSPlayer({ videoId = 'default-video', showTitle = true, showRelate
                             }}
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                             referrerPolicy="strict-origin-when-cross-origin"
-                            allowFullScreen
+                            allowFullScreen={!blockDriveFullscreen}
                             title={mediaData.data?.title || 'External video'}
                         />
+                        <div style={toolbarShieldStyle} aria-hidden="true" />
                     </div>
                 </div>
             );
@@ -2427,8 +2454,23 @@ function VideoJSPlayer({ videoId = 'default-video', showTitle = true, showRelate
 
         if (embedHtml) {
             return (
-                <div className="player-container external-video-container">
-                    <div className="player-container-inner" dangerouslySetInnerHTML={{ __html: embedHtml }} />
+                <div
+                    className="player-container external-video-container"
+                    onContextMenu={(e) => e.preventDefault()}
+                >
+                    <div className="player-container-inner">
+                        <div
+                            style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                width: '100%',
+                                height: '100%',
+                            }}
+                            dangerouslySetInnerHTML={{ __html: embedHtml }}
+                        />
+                        <div style={toolbarShieldStyle} aria-hidden="true" />
+                    </div>
                 </div>
             );
         }

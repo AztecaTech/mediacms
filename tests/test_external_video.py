@@ -43,6 +43,23 @@ class DetectPlatformTests(TestCase):
         self.assertEqual(platform, "dailymotion")
         self.assertEqual(video_id, "x7zzrmj")
 
+    def test_google_drive_file_view_url(self):
+        platform, video_id = detect_platform(
+            "https://drive.google.com/file/d/1abcXYZ_09/view?usp=sharing"
+        )
+        self.assertEqual(platform, "googledrive")
+        self.assertEqual(video_id, "1abcXYZ_09")
+
+    def test_google_drive_open_id_url(self):
+        platform, video_id = detect_platform("https://drive.google.com/open?id=1OpenIdTest_-abc")
+        self.assertEqual(platform, "googledrive")
+        self.assertEqual(video_id, "1OpenIdTest_-abc")
+
+    def test_google_docs_file_d_url(self):
+        platform, video_id = detect_platform("https://docs.google.com/file/d/1DocLegacyId/view")
+        self.assertEqual(platform, "googledrive")
+        self.assertEqual(video_id, "1DocLegacyId")
+
     def test_unknown_url(self):
         platform, video_id = detect_platform("https://example.com/video/123")
         self.assertIsNone(platform)
@@ -63,6 +80,10 @@ class GetEmbedUrlTests(TestCase):
     def test_dailymotion_embed(self):
         result = get_embed_url("https://www.dailymotion.com/video/x7zzrmj")
         self.assertEqual(result, "https://www.dailymotion.com/embed/video/x7zzrmj")
+
+    def test_google_drive_embed(self):
+        result = get_embed_url("https://drive.google.com/file/d/1TestFileId_x/view")
+        self.assertEqual(result, "https://drive.google.com/file/d/1TestFileId_x/preview")
 
     def test_unknown_returns_none(self):
         result = get_embed_url("https://example.com/video/123")
