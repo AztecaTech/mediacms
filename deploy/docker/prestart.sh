@@ -23,13 +23,13 @@ if [ X"$ENABLE_MIGRATIONS" = X"yes" ]; then
         echo "Created admin user with password: $ADMIN_PASSWORD"
 
     fi
-    echo "RUNNING COLLECTSTATIC"
-
-    python manage.py collectstatic --noinput
 
     echo "Ensuring Site record exists for FRONTEND_HOST ..."
     echo "from django.contrib.sites.models import Site; site, _ = Site.objects.get_or_create(id=1, defaults={'domain': 'localhost', 'name': 'MediaCMS'}); site.domain = '${FRONTEND_HOST}'.replace('https://', '').replace('http://', '').rstrip('/'); site.name = 'MediaCMS'; site.save(); print(f'Site domain set to: {site.domain}')" | python manage.py shell
 fi
+
+echo "RUNNING COLLECTSTATIC"
+python manage.py collectstatic --noinput
 
 # Setting up internal nginx server
 # HTTPS setup is delegated to a reverse proxy running infront of the application

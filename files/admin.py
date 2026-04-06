@@ -14,6 +14,7 @@ from .models import (
     Encoding,
     Language,
     Media,
+    MediaPermission,
     Page,
     Subtitle,
     Tag,
@@ -55,6 +56,14 @@ class ExternalMediaForm(forms.ModelForm):
             cleaned_data['source_type'] = 'local'
 
         return cleaned_data
+
+
+class MediaPermissionInline(admin.TabularInline):
+    model = MediaPermission
+    extra = 1
+    fields = ('user', 'permission', 'owner_user')
+    raw_id_fields = ('user', 'owner_user')
+    autocomplete_fields = ('user',)
 
 
 class MediaAdmin(admin.ModelAdmin):
@@ -103,6 +112,7 @@ class MediaAdmin(admin.ModelAdmin):
             if not m.is_external:
                 m.encode(force=False)
 
+    inlines = [MediaPermissionInline]
     actions = [generate_missing_encodings]
     get_comments_count.short_description = "Comments count"
 
@@ -324,6 +334,16 @@ class TinyMCEMediaAdmin(admin.ModelAdmin):
     date_hierarchy = 'uploaded_at'
 
 
+class MediaPermissionAdmin(admin.ModelAdmin):
+    list_display = ['media', 'user', 'permission', 'owner_user', 'created_at']
+    list_filter = ['permission']
+    search_fields = ['media__title', 'user__username', 'user__email']
+    raw_id_fields = ('user', 'owner_user', 'media')
+    autocomplete_fields = ('user', 'media')
+    readonly_fields = ('created_at',)
+
+
+admin.site.register(MediaPermission, MediaPermissionAdmin)
 admin.site.register(EncodeProfile, EncodeProfileAdmin)
 admin.site.register(Comment, CommentAdmin)
 admin.site.register(Media, MediaAdmin)
