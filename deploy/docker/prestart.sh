@@ -6,22 +6,43 @@ ADMIN_PASSWORD=${ADMIN_PASSWORD:-$RANDOM_ADMIN_PASS}
 if [ X"$ENABLE_MIGRATIONS" = X"yes" ]; then
     echo "Running migrations service"
     python manage.py migrate
-    EXISTING_INSTALLATION=$(python -c "import django; django.setup(); from users.models import User; print(User.objects.exists())" 2>/dev/null)
-    if echo "$EXISTING_INSTALLATION" | grep -q "True"; then
-        echo "Loaddata has already run"
-    else
-        echo "Running loaddata and creating admin user"
-        python manage.py loaddata fixtures/encoding_profiles.json
-        python manage.py loaddata fixtures/categories.json
 
-    	# post_save, needs redis to succeed (ie. migrate depends on redis)
+    # Encode profiles are the reliable "DB has been provisioned" marker. Only seed default
+    # categories on the first run where encoding fixtures were absent — not whenever User
+    # check fails or the DB was wiped in odd ways while profiles already exist.
+    HAS_ENCODE_PROFILES=$(python -c "import django; django.setup(); from files.models import EncodeProfile; print('True' if EncodeProfile.objects.exists() else 'False')" 2>/dev/null || echo "False")
+    if [ "$HAS_ENCODE_PROFILES" != "True" ]; then
+        echo "Loading encoding profiles fixture (first-time DB seed)"
+        python manage.py loaddata fixtures/encoding_profiles.json
+        FRESH_ENCODING_SEED=1
+    else
+        FRESH_ENCODING_SEED=0
+    fi
+
+    HAS_USER=$(python -c "import django; django.setup(); from users.models import User; print('True' if User.objects.exists() else 'False')" 2>/dev/null || echo "False")
+    if [ "$HAS_USER" = "True" ]; then
+        echo "Admin user(s) already exist; skipping category fixture and createsuperuser"
+    else
+        # Default categories only on first install (encoding fixtures were just loaded).
+        # Set SEED_DEFAULT_CATEGORIES=no to skip even then.
+        SEED_CATS="${SEED_DEFAULT_CATEGORIES:-yes}"
+        if [ "$FRESH_ENCODING_SEED" = "1" ] && [ "$SEED_CATS" != "no" ] && [ "$SEED_CATS" != "false" ] && [ "$SEED_CATS" != "0" ]; then
+            echo "Loading default categories fixture (first install only)"
+            python manage.py loaddata fixtures/categories.json
+        elif [ "$FRESH_ENCODING_SEED" != "1" ]; then
+            echo "Skipping categories fixture (encoding profiles already present — not a fresh DB)"
+        else
+            echo "Skipping categories fixture (SEED_DEFAULT_CATEGORIES=$SEED_CATS)"
+        fi
+
+        # post_save, needs redis to succeed (ie. migrate depends on redis)
+        echo "Creating admin user"
         DJANGO_SUPERUSER_PASSWORD=$ADMIN_PASSWORD python manage.py createsuperuser \
             --no-input \
             --username=$ADMIN_USER \
             --email=$ADMIN_EMAIL \
             --database=default || true
         echo "Created admin user with password: $ADMIN_PASSWORD"
-
     fi
 
     echo "Ensuring Site record exists for FRONTEND_HOST ..."

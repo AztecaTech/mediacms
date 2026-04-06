@@ -1,6 +1,16 @@
 # Dokploy / production-style compose: builds YOUR repo (Dockerfile), not Docker Hub.
 # In Dokploy set "Compose Path" to: ./docker-compose.dokploy.yml
 #
+# Database persistence (critical):
+#   The named volume `mediacms_pgdata` must survive redeploys. If Postgres data is lost on
+#   restart, you get an empty DB every time: admin/users/media gone and default categories
+#   come back from fixtures. In Dokploy, do not remove project volumes on deploy; avoid
+#   `docker compose down -v`. Prefer a dedicated Postgres service or external volume if
+#   your platform prunes anonymous volumes.
+#
+# Optional (migrations service / project env):
+#   SEED_DEFAULT_CATEGORIES=no — skip fixtures/categories.json even on first install
+#
 # Required env in Dokploy (project or service):
 #   FRONTEND_HOST=https://your.domain.tld
 #   SECRET_KEY=<long-random-string>
@@ -65,6 +75,7 @@ services:
       ADMIN_USER: ${ADMIN_USER:-admin}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@localhost}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      SEED_DEFAULT_CATEGORIES: ${SEED_DEFAULT_CATEGORIES:-yes}
     volumes:
       - mediacms_media:/home/mediacms.io/mediacms/media_files
     depends_on:
