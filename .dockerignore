@@ -50,6 +50,8 @@
 
 # Media files and data directories (should not be in image)
 media_files/**
+!media_files/userlogos
+!media_files/userlogos/**
 postgres_data/**
 pids/**
 

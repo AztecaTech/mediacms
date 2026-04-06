@@ -87,7 +87,8 @@ COPY . /home/mediacms.io/mediacms
 WORKDIR /home/mediacms.io/mediacms
 
 # Preserve default media assets so they survive volume mounts
-RUN cp -r /home/mediacms.io/mediacms/media_files/userlogos /home/mediacms.io/mediacms/media_files_defaults/userlogos
+RUN mkdir -p /home/mediacms.io/mediacms/media_files_defaults && \
+    cp -r /home/mediacms.io/mediacms/media_files/userlogos /home/mediacms.io/mediacms/media_files_defaults/userlogos
 
 # required for sprite thumbnail generation for large video files
 COPY deploy/docker/policy.xml /etc/ImageMagick-6/policy.xml
