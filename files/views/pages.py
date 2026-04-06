@@ -667,6 +667,11 @@ def tags(request):
 def tos(request):
     """Terms of service view"""
 
+    page = Page.objects.filter(slug="tos").first()
+    if page:
+        context = {"page": page}
+        return render(request, "cms/page.html", context)
+
     context = {}
     return render(request, "cms/tos.html", context)
 

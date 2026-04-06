@@ -6,8 +6,8 @@ ADMIN_PASSWORD=${ADMIN_PASSWORD:-$RANDOM_ADMIN_PASS}
 if [ X"$ENABLE_MIGRATIONS" = X"yes" ]; then
     echo "Running migrations service"
     python manage.py migrate
-    EXISTING_INSTALLATION=`echo "from users.models import User; print(User.objects.exists())" |python manage.py shell`
-    if [ "$EXISTING_INSTALLATION" = "True" ]; then
+    EXISTING_INSTALLATION=$(python -c "import django; django.setup(); from users.models import User; print(User.objects.exists())" 2>/dev/null)
+    if echo "$EXISTING_INSTALLATION" | grep -q "True"; then
         echo "Loaddata has already run"
     else
         echo "Running loaddata and creating admin user"

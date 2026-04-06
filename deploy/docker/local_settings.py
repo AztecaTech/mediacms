@@ -37,3 +37,7 @@ DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 USE_RBAC = True
 PORTAL_WORKFLOW = "private"
+
+# Use PNG logos (SVG files contain old MediaCMS logo)
+PORTAL_LOGO_DARK_SVG = ""
+PORTAL_LOGO_LIGHT_SVG = ""
