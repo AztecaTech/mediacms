@@ -23,18 +23,21 @@ class CategoryList(APIView):
         },
     )
     def get(self, request, format=None):
-        base_filters = {}
-
-        if not is_mediacms_editor(request.user):
-            base_filters = {"is_rbac_category": False}
-
         base_queryset = Category.objects.prefetch_related("user")
-        categories = base_queryset.filter(**base_filters)
 
-        if not is_mediacms_editor(request.user):
-            if getattr(settings, 'USE_RBAC', False) and request.user.is_authenticated:
+        if is_mediacms_editor(request.user):
+            categories = base_queryset.all()
+        elif request.user.is_authenticated:
+            # Signed-in users see: non-RBAC public + requires_login + their RBAC categories
+            from django.db.models import Q
+            conditions = Q(is_rbac_category=False)
+            if getattr(settings, 'USE_RBAC', False):
                 rbac_categories = request.user.get_rbac_categories_as_member()
-                categories = categories.union(rbac_categories)
+                conditions |= Q(pk__in=rbac_categories)
+            categories = base_queryset.filter(conditions).distinct()
+        else:
+            # Anonymous users: only non-RBAC categories that don't require login
+            categories = base_queryset.filter(is_rbac_category=False, requires_login=False)
 
         categories = categories.order_by("title")
 

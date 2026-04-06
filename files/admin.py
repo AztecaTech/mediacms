@@ -203,8 +203,8 @@ class CategoryAdmin(admin.ModelAdmin):
     form = CategoryAdminForm
 
     search_fields = ["title", "uid"]
-    list_display = ["title", "user", "add_date", "media_count"]
-    list_filter = []
+    list_display = ["title", "user", "add_date", "requires_login", "media_count"]
+    list_filter = ["requires_login"]
     ordering = ("-add_date",)
     readonly_fields = ("user", "media_count")
     change_form_template = 'admin/files/category/change_form.html'
@@ -234,6 +234,13 @@ class CategoryAdmin(admin.ModelAdmin):
                 'Category Information',
                 {
                     'fields': ['uid', 'title', 'description', 'user', 'media_count', 'thumbnail', 'listings_thumbnail'],
+                },
+            ),
+            (
+                'Visibility',
+                {
+                    'fields': ['requires_login'],
+                    'description': 'Check to make this category visible only to signed-in users (hidden from anonymous visitors)',
                 },
             ),
         ]

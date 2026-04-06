@@ -37,6 +37,8 @@ class Category(models.Model):
 
     is_rbac_category = models.BooleanField(default=False, db_index=True, help_text='If access to Category is controlled by role based membership of Groups')
 
+    requires_login = models.BooleanField(default=False, db_index=True, help_text='Visible to all signed-in users but hidden from anonymous visitors')
+
     identity_provider = models.ForeignKey(
         'socialaccount.SocialApp',
         blank=True,
