@@ -13,3 +13,13 @@ body {
 }
 
 
+.auth-hero {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.auth-hero img {
+  max-width: 240px;
+  height: auto;
+  display: inline-block;
+}

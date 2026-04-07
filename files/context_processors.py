@@ -1,5 +1,6 @@
 from django.conf import settings
 
+from branding.models import BrandingSettings
 from cms.version import VERSION
 
 from .frontend_translations import get_translation, get_translation_strings
@@ -11,14 +12,26 @@ def stuff(request):
     ret = {}
     ret["FRONTEND_HOST"] = request.build_absolute_uri('/').rstrip('/')
     ret["DEFAULT_THEME"] = settings.DEFAULT_THEME
-    ret["PORTAL_NAME"] = settings.PORTAL_NAME
+    branding = BrandingSettings.load()
 
-    ret["PORTAL_LOGO_DARK_SVG"] = getattr(settings, 'PORTAL_LOGO_DARK_SVG', "")
-    ret["PORTAL_LOGO_DARK_PNG"] = getattr(settings, 'PORTAL_LOGO_DARK_PNG', "")
-    ret["PORTAL_LOGO_LIGHT_SVG"] = getattr(settings, 'PORTAL_LOGO_LIGHT_SVG', "")
-    ret["PORTAL_LOGO_LIGHT_PNG"] = getattr(settings, 'PORTAL_LOGO_LIGHT_PNG', "")
+    ret["PORTAL_NAME"] = branding.portal_name or settings.PORTAL_NAME
+
+    if branding.logo_dark_mode:
+        ret["PORTAL_LOGO_DARK_PNG"] = branding.logo_dark_mode.url
+        ret["PORTAL_LOGO_DARK_SVG"] = ""
+    else:
+        ret["PORTAL_LOGO_DARK_PNG"] = getattr(settings, "PORTAL_LOGO_DARK_PNG", "")
+        ret["PORTAL_LOGO_DARK_SVG"] = getattr(settings, "PORTAL_LOGO_DARK_SVG", "")
+
+    if branding.logo_light_mode:
+        ret["PORTAL_LOGO_LIGHT_PNG"] = branding.logo_light_mode.url
+        ret["PORTAL_LOGO_LIGHT_SVG"] = ""
+    else:
+        ret["PORTAL_LOGO_LIGHT_PNG"] = getattr(settings, "PORTAL_LOGO_LIGHT_PNG", "")
+        ret["PORTAL_LOGO_LIGHT_SVG"] = getattr(settings, "PORTAL_LOGO_LIGHT_SVG", "")
+
     ret["EXTRA_CSS_PATHS"] = getattr(settings, 'EXTRA_CSS_PATHS', [])
-    ret["PORTAL_DESCRIPTION"] = settings.PORTAL_DESCRIPTION
+    ret["PORTAL_DESCRIPTION"] = branding.portal_description or settings.PORTAL_DESCRIPTION
     ret["LOAD_FROM_CDN"] = settings.LOAD_FROM_CDN
     ret["CAN_LOGIN"] = settings.LOGIN_ALLOWED
     ret["CAN_REGISTER"] = settings.REGISTER_ALLOWED
@@ -32,7 +45,7 @@ def stuff(request):
     ret["UPLOAD_MAX_SIZE"] = settings.UPLOAD_MAX_SIZE
     ret["UPLOAD_MAX_FILES_NUMBER"] = settings.UPLOAD_MAX_FILES_NUMBER
     ret["PRE_UPLOAD_MEDIA_MESSAGE"] = settings.PRE_UPLOAD_MEDIA_MESSAGE
-    ret["SIDEBAR_FOOTER_TEXT"] = settings.SIDEBAR_FOOTER_TEXT
+    ret["SIDEBAR_FOOTER_TEXT"] = branding.footer_text or settings.SIDEBAR_FOOTER_TEXT
     ret["POST_UPLOAD_AUTHOR_MESSAGE_UNLISTED_NO_COMMENTARY"] = settings.POST_UPLOAD_AUTHOR_MESSAGE_UNLISTED_NO_COMMENTARY
     ret["IS_MEDIACMS_ADMIN"] = request.user.is_superuser
     ret["IS_MEDIACMS_EDITOR"] = is_mediacms_editor(request.user)
@@ -63,5 +76,10 @@ def stuff(request):
 
     if request.user.is_superuser:
         ret["DJANGO_ADMIN_URL"] = settings.DJANGO_ADMIN_URL
+
+    ret["BRANDING_FAVICON_URL"] = branding.favicon.url if branding.favicon else ""
+    ret["BRANDING_LOGIN_HERO_URL"] = branding.login_hero_image.url if branding.login_hero_image else ""
+    ret["BRANDING_REGISTER_HERO_URL"] = branding.register_hero_image.url if branding.register_hero_image else ""
+    ret["BRANDING_NOT_FOUND_URL"] = branding.not_found_image.url if branding.not_found_image else ""
 
     return ret

@@ -6,6 +6,10 @@
 <div class="user-action-form-wrap">
     <div class="user-action-form-inner">
 
+		{% if BRANDING_REGISTER_HERO_URL %}
+		<div class="auth-hero"><img src="{{ BRANDING_REGISTER_HERO_URL }}" alt="{{ PORTAL_NAME }}"></div>
+		{% endif %}
+
 		<h1>Sign Up</h1>
 
 		<p>Already have an account? Then please <a href="{{ login_url }}">sign in</a>.</p>

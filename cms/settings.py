@@ -296,6 +296,7 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     "imagekit",
     "files.apps.FilesConfig",
+    "branding.apps.BrandingConfig",
     "users.apps.UsersConfig",
     "actions.apps.ActionsConfig",
     "rbac.apps.RbacConfig",

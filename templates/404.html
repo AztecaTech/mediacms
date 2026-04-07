@@ -3,6 +3,9 @@
 {% block headtitle %} - error{% endblock headtitle %}
 
 {% block innercontent %}
+	{% if BRANDING_NOT_FOUND_URL %}
+	<div class="auth-hero"><img src="{{ BRANDING_NOT_FOUND_URL }}" alt="{{ PORTAL_NAME }}"></div>
+	{% endif %}
 	<p>you are lost!</p>
 {% endblock %}
 
