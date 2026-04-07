@@ -41,7 +41,7 @@
 			</div>
 			<div id="add-media-panel-external" class="add-media-external-panel" style="display:none;max-width:640px;margin-bottom:1.5rem;padding:12px;border:1px solid rgba(0,0,0,.08);border-radius:4px;">
 				{{ external_upload_categories|json_script:"external-upload-categories-data" }}
-				<p style="margin:0 0 12px;font-size:14px;">{{ "Paste a link from YouTube, Vimeo, Google Drive, or another supported site." | custom_translate:LANGUAGE_CODE}}</p>
+				<p style="margin:0 0 12px;font-size:14px;">{{ "Paste a link from YouTube, Vimeo, Google Drive, or another supported site. You can also paste a direct link to a video file (.mp4, .mov, .m4v, .webm, .ogv); it plays in the built-in player. The file URL is visible on the page—use direct links only when that is acceptable. Upload a poster if there is no platform thumbnail." | custom_translate:LANGUAGE_CODE}}</p>
 				<label for="external-video-url" style="display:block;font-size:13px;margin-bottom:4px;">URL</label>
 				<input type="url" id="external-video-url" required placeholder="https://..." style="width:100%;max-width:100%;box-sizing:border-box;padding:8px;margin-bottom:10px;" />
 				<label for="external-video-title" style="display:block;font-size:13px;margin-bottom:4px;">{{ "Title" | custom_translate:LANGUAGE_CODE}} <span style="font-weight:normal;opacity:.7;">({{ "optional" | custom_translate:LANGUAGE_CODE}})</span></label>

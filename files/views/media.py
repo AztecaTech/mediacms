@@ -318,13 +318,21 @@ class MediaList(APIView):
         serializer = MediaSerializer(data=request.data, context={"request": request})
         if serializer.is_valid():
             if source_url:
+                from ..external_utils import resolve_source_type_for_url, suggested_title_from_direct_video_url
+
+                source_type = resolve_source_type_for_url(source_url)
                 instance = serializer.save(
                     user=request.user,
                     source_url=source_url,
-                    source_type="external",
+                    source_type=source_type,
                     media_type="video",
                     encoding_status="success",
                 )
+                if source_type == "direct":
+                    suggested = suggested_title_from_direct_video_url(source_url)
+                    if suggested and (not instance.title or not str(instance.title).strip() or instance.title == "Untitled"):
+                        instance.title = suggested[:100]
+                        instance.save(update_fields=["title"])
             else:
                 instance = serializer.save(user=request.user, media_file=media_file)
 

@@ -7,6 +7,7 @@ from tinymce.widgets import TinyMCE
 
 from rbac.models import RBACGroup
 
+from .external_utils import resolve_source_type_for_url
 from .models import (
     Category,
     Comment,
@@ -53,7 +54,7 @@ class ExternalMediaForm(forms.ModelForm):
                 raise ValidationError("Provide either a media file or an external source URL.")
 
         if source_url:
-            cleaned_data['source_type'] = 'external'
+            cleaned_data["source_type"] = resolve_source_type_for_url(source_url)
         elif not self.instance.pk or not self.instance.source_url:
             cleaned_data['source_type'] = 'local'
 
@@ -95,7 +96,12 @@ class MediaAdmin(admin.ModelAdmin):
         ('External Video', {
             'fields': ('source_url', 'source_type', 'embed_html'),
             'classes': ('collapse',),
-            'description': 'For embedding videos from YouTube, Vimeo, Google Drive, etc. Provide a source URL instead of uploading a file.',
+            'description': (
+                'Paste a platform URL (YouTube, Vimeo, Google Drive, etc.) or a direct link to a '
+                'progressive file (.mp4, .mov, .m4v, .webm, .ogv). Direct URLs play in the built-in '
+                'player; the file URL is visible to viewers—use only when that is acceptable. '
+                'Upload a poster image when there is no platform thumbnail.'
+            ),
         }),
         ('Status & Visibility', {
             'fields': ('state', 'is_reviewed', 'encoding_status', 'featured', 'allow_download', 'enable_comments'),
@@ -111,7 +117,7 @@ class MediaAdmin(admin.ModelAdmin):
     @admin.action(description="Generate missing encoding(s)", permissions=["change"])
     def generate_missing_encodings(modeladmin, request, queryset):
         for m in queryset:
-            if not m.is_external:
+            if not m.is_remote_video_source:
                 m.encode(force=False)
 
     inlines = [MediaPermissionInline]

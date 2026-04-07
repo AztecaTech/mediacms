@@ -8,7 +8,15 @@ import urllib.error
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 
-from files.external_utils import detect_platform, fetch_oembed, get_embed_url
+from files.external_utils import (
+    detect_platform,
+    direct_progressive_video_mime_type,
+    fetch_oembed,
+    get_embed_url,
+    is_direct_progressive_video_url,
+    resolve_source_type_for_url,
+    suggested_title_from_direct_video_url,
+)
 from files.models import Category, Media
 from files.tests import create_account
 
@@ -32,6 +40,11 @@ class DetectPlatformTests(TestCase):
         platform, video_id = detect_platform("https://youtube.com/shorts/dQw4w9WgXcQ")
         self.assertEqual(platform, "youtube")
         self.assertEqual(video_id, "dQw4w9WgXcQ")
+
+    def test_youtube_live_url(self):
+        platform, video_id = detect_platform("https://www.youtube.com/live/UncrPAKTnkw")
+        self.assertEqual(platform, "youtube")
+        self.assertEqual(video_id, "UncrPAKTnkw")
 
     def test_vimeo_url(self):
         platform, video_id = detect_platform("https://vimeo.com/123456789")
@@ -101,6 +114,10 @@ class GetEmbedUrlTests(TestCase):
         result = get_embed_url("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
         self.assertEqual(result, "https://www.youtube.com/embed/dQw4w9WgXcQ")
 
+    def test_youtube_live_embed(self):
+        result = get_embed_url("https://www.youtube.com/live/UncrPAKTnkw")
+        self.assertEqual(result, "https://www.youtube.com/embed/UncrPAKTnkw")
+
     def test_vimeo_embed(self):
         result = get_embed_url("https://vimeo.com/123456789")
         self.assertEqual(result, "https://player.vimeo.com/video/123456789")
@@ -118,6 +135,47 @@ class GetEmbedUrlTests(TestCase):
         self.assertIsNone(result)
 
 
+class DirectProgressiveUrlTests(TestCase):
+    """Extension-based direct video URL helpers."""
+
+    def test_detects_mov_with_query(self):
+        self.assertTrue(
+            is_direct_progressive_video_url(
+                "https://ctec.org/wp-content/uploads/2025/12/30second_EN.mov?x=1"
+            )
+        )
+
+    def test_youtube_not_direct(self):
+        self.assertFalse(is_direct_progressive_video_url("https://www.youtube.com/watch?v=abc"))
+
+    def test_resolve_youtube_external(self):
+        self.assertEqual(
+            resolve_source_type_for_url("https://www.youtube.com/watch?v=abc"),
+            "external",
+        )
+
+    def test_resolve_mov_direct(self):
+        self.assertEqual(
+            resolve_source_type_for_url("https://example.com/v/file.mov"),
+            "direct",
+        )
+
+    def test_unknown_host_still_external_type_for_oembed(self):
+        self.assertEqual(resolve_source_type_for_url("https://example.com/noext"), "external")
+
+    def test_mime_mov(self):
+        self.assertEqual(
+            direct_progressive_video_mime_type("https://x/y/trailer.mov"),
+            "video/quicktime",
+        )
+
+    def test_suggested_title(self):
+        self.assertEqual(
+            suggested_title_from_direct_video_url("https://cdn.example.com/path/my_clip_EN.mov"),
+            "my clip EN",
+        )
+
+
 class ExternalMediaModelTests(TestCase):
     """Tests for external video Media model behavior."""
 
@@ -131,6 +189,28 @@ class ExternalMediaModelTests(TestCase):
     def test_is_not_external_for_local(self):
         media = Media(source_type="local", user=self.user)
         self.assertFalse(media.is_external)
+
+    def test_is_direct_property(self):
+        media = Media(
+            source_type="direct",
+            source_url="https://example.com/a.mp4",
+            user=self.user,
+        )
+        self.assertTrue(media.is_direct)
+        self.assertFalse(media.is_external)
+        self.assertTrue(media.is_remote_video_source)
+
+    def test_direct_media_skips_encoding_like_external(self):
+        media = Media.objects.create(
+            source_type="direct",
+            source_url="https://example.com/clip.mp4",
+            title="Direct clip",
+            user=self.user,
+        )
+        media.refresh_from_db()
+        self.assertEqual(media.encoding_status, "success")
+        self.assertEqual(media.media_type, "video")
+        self.assertFalse(media.allow_download)
 
     def test_external_media_encoding_status_set_to_success(self):
         media = Media.objects.create(
@@ -227,6 +307,20 @@ class ExternalMediaAPITests(TestCase):
         media = Media.objects.get(friendly_token=data["friendly_token"])
         self.assertTrue(media.is_external)
         self.assertEqual(media.source_url, "https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+
+    def test_post_direct_source_url_sets_source_type_direct(self):
+        client = Client()
+        self.assertTrue(client.login(username=self.user.username, password=self.password))
+        response = client.post(
+            "/api/v1/media",
+            {"source_url": "https://example.org/media/promo.mov"},
+        )
+        self.assertEqual(response.status_code, 201)
+        data = response.json()
+        self.assertEqual(data.get("source_type"), "direct")
+        media = Media.objects.get(friendly_token=data["friendly_token"])
+        self.assertTrue(media.is_direct)
+        self.assertIn("promo", media.title.lower())
 
     def test_post_external_with_allowed_category(self):
         client = Client()

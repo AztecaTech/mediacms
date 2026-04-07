@@ -19,7 +19,7 @@ OEMBED_ENDPOINTS = {
 # Regex patterns to identify platforms from URLs
 PLATFORM_PATTERNS = {
     "youtube": re.compile(
-        r"(?:https?://)?(?:www\.)?(?:youtube\.com/watch\?v=|youtu\.be/|youtube\.com/embed/|youtube\.com/shorts/)([a-zA-Z0-9_-]+)"
+        r"(?:https?://)?(?:www\.)?(?:youtube\.com/watch\?v=|youtu\.be/|youtube\.com/embed/|youtube\.com/shorts/|youtube\.com/live/)([a-zA-Z0-9_-]+)"
     ),
     "vimeo": re.compile(r"(?:https?://)?(?:www\.)?vimeo\.com/(\d+)"),
     "dailymotion": re.compile(r"(?:https?://)?(?:www\.)?dailymotion\.com/video/([a-zA-Z0-9]+)"),
@@ -30,6 +30,69 @@ PLATFORM_PATTERNS = {
         r"([a-zA-Z0-9_-]+)"
     ),
 }
+
+# Progressive video file extensions (URL path); query strings are ignored for matching.
+DIRECT_PROGRESSIVE_VIDEO_EXTENSIONS = (".mp4", ".mov", ".m4v", ".webm", ".ogv")
+
+
+def _url_path_lower(url):
+    if not url or not isinstance(url, str):
+        return ""
+    parsed = urllib.parse.urlparse(url.strip())
+    return (parsed.path or "").lower()
+
+
+def is_direct_progressive_video_url(url):
+    """True if URL path ends with a known progressive video extension."""
+    path = _url_path_lower(url)
+    return any(path.endswith(ext) for ext in DIRECT_PROGRESSIVE_VIDEO_EXTENSIONS)
+
+
+def direct_progressive_video_mime_type(url):
+    """Best-effort MIME type for Video.js source from URL path extension."""
+    path = _url_path_lower(url)
+    suffix_map = {
+        ".mp4": "video/mp4",
+        ".m4v": "video/mp4",
+        ".mov": "video/quicktime",
+        ".webm": "video/webm",
+        ".ogv": "video/ogg",
+    }
+    for ext, mime in suffix_map.items():
+        if path.endswith(ext):
+            return mime
+    return "video/mp4"
+
+
+def resolve_source_type_for_url(url):
+    """Classify a pasted video URL for Media.source_type.
+
+    Order: known iframe platforms → external; direct file extension → direct;
+    otherwise external (oEmbed / generic embed path).
+    """
+    if not url or not str(url).strip():
+        return "external"
+    u = str(url).strip()
+    platform, _ = detect_platform(u)
+    if platform:
+        return "external"
+    if is_direct_progressive_video_url(u):
+        return "direct"
+    return "external"
+
+
+def suggested_title_from_direct_video_url(url):
+    """Derive a human-readable title from the last path segment (strip extension)."""
+    if not url or not isinstance(url, str):
+        return None
+    path = urllib.parse.urlparse(url.strip()).path
+    segment = path.rstrip("/").split("/")[-1]
+    if not segment:
+        return None
+    if "." in segment:
+        segment = segment.rsplit(".", 1)[0]
+    segment = segment.replace("_", " ").replace("-", " ").strip()
+    return segment or None
 
 
 def detect_platform(url):

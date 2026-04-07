@@ -10,6 +10,7 @@ import {
     videoAvailableCodecsAndResolutions,
     extractDefaultVideoResolution,
 } from './functions';
+import { mimeTypeForDirectProgressiveUrl } from '../../../utils/directVideoSource';
 // import { VideoPlayer, VideoPlayerError } from '../../video-player/VideoPlayer';
 import VideoJSEmbed from '../../VideoJS/VideoJSEmbed';
 import ExternalVideoEmbed from '../ExternalVideoEmbed';
@@ -50,6 +51,34 @@ export default class VideoViewer extends React.PureComponent {
             return;
         }
         this.isExternal = false;
+
+        if (this.props.data.source_type === 'direct') {
+            const src = this.props.data.source_url ? String(this.props.data.source_url).trim() : '';
+            this.videoSources = src
+                ? [{ src, type: mimeTypeForDirectProgressiveUrl(src) }]
+                : [];
+            if ('string' === typeof this.props.data.poster_url) {
+                this.videoPoster = formatInnerLink(this.props.data.poster_url, this.props.siteUrl);
+            } else if ('string' === typeof this.props.data.thumbnail_url) {
+                this.videoPoster = formatInnerLink(this.props.data.thumbnail_url, this.props.siteUrl);
+            }
+            this.videoInfo = null;
+            if (!this.videoSources.length) {
+                console.warn('VIDEO DEBUG:', "Video files don't exist");
+            }
+            PageStore.on('switched_media_auto_play', this.onUpdateMediaAutoPlay.bind(this));
+            this.browserCache = new BrowserCache(SiteContext._currentValue.id, 86400);
+            const directDurationInfo = new MediaDurationInfo();
+            directDurationInfo.update(this.props.data.duration);
+            this.durationISO8601 = directDurationInfo.ISO8601();
+            this.playerElem = null;
+            this.playerInstance = null;
+            this.onPlayerInit = this.onPlayerInit.bind(this);
+            this.onClickNext = this.onClickNext.bind(this);
+            this.onClickPrevious = this.onClickPrevious.bind(this);
+            this.onStateUpdate = this.onStateUpdate.bind(this);
+            return;
+        }
 
         filterVideoEncoding(this.props.data.encoding_status);
 

@@ -603,7 +603,7 @@ def create_hls(friendly_token):
         logger.info(f"failed to get media with friendly_token {friendly_token}")
         return False
 
-    if media.is_external:
+    if media.is_remote_video_source or not media.media_file:
         return False
 
     p = media.uid.hex

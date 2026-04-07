@@ -105,14 +105,14 @@ class Media(models.Model):
         max_length=500,
         blank=True,
         null=True,
-        help_text="URL of external video (YouTube, Vimeo, etc.)",
+        help_text="URL of external or direct-link video (YouTube, Vimeo, .mp4, .mov, etc.)",
     )
 
     source_type = models.CharField(
         max_length=20,
         choices=SOURCE_TYPES,
         default="local",
-        help_text="Whether media is a local upload or external embed",
+        help_text="Local upload, iframe embed (external), or direct progressive video URL",
     )
 
     embed_html = models.TextField(
@@ -252,6 +252,15 @@ class Media(models.Model):
     def is_external(self):
         return self.source_type == "external"
 
+    @property
+    def is_direct(self):
+        return self.source_type == "direct"
+
+    @property
+    def is_remote_video_source(self):
+        """True for iframe embeds and direct progressive URLs (no local media_file)."""
+        return self.is_external or self.is_direct
+
     def __init__(self, *args, **kwargs):
         super(Media, self).__init__(*args, **kwargs)
         # keep track if media file has changed, on saves
@@ -333,7 +342,7 @@ class Media(models.Model):
         else:
             self.listable = False
 
-        if self.is_external:
+        if self.is_remote_video_source:
             self.allow_download = False
 
         super(Media, self).save(*args, **kwargs)
@@ -350,6 +359,9 @@ class Media(models.Model):
                 self.uploaded_thumbnail.save(content=myfile, name=thumbnail_name)
 
     def transcribe_function(self):
+        if self.is_remote_video_source or not self.media_file:
+            return
+
         to_transcribe = False
         to_transcribe_and_translate = False
 
@@ -419,12 +431,18 @@ class Media(models.Model):
         video duration, encode
         """
         if self.is_external:
-            # External videos skip the entire encoding pipeline
             self.media_type = "video"
             self.encoding_status = "success"
             self.save(update_fields=["media_type", "encoding_status"])
             from ..tasks import fetch_external_metadata
+
             fetch_external_metadata.delay(self.friendly_token)
+            return True
+
+        if self.is_direct:
+            self.media_type = "video"
+            self.encoding_status = "success"
+            self.save(update_fields=["media_type", "encoding_status"])
             return True
 
         self.set_media_type()
@@ -526,7 +544,7 @@ class Media(models.Model):
         For image save thumbnail and poster, this will perform
         resize action
         """
-        if self.is_external:
+        if self.is_remote_video_source:
             return False
         if force or (not self.thumbnail):
             if self.media_type == "video":
@@ -586,7 +604,7 @@ class Media(models.Model):
         """Start a task that will produce a sprite file
         To be used on the video player
         """
-        if self.is_external:
+        if self.is_remote_video_source:
             return False
 
         from .. import tasks
@@ -600,7 +618,7 @@ class Media(models.Model):
         so that no EncodeProfile for highter heights than the video
         are created
         """
-        if self.is_external:
+        if self.is_remote_video_source:
             return False
 
         if not profiles:
@@ -698,7 +716,7 @@ class Media(models.Model):
     def trim_video_url(self):
         if self.media_type not in ["video", "audio"]:
             return None
-        if self.is_external:
+        if self.is_remote_video_source:
             return None
 
         ret = self.encodings.filter(status="success", profile__extension='mp4', chunk=False).order_by("-profile__resolution").first()
@@ -712,7 +730,7 @@ class Media(models.Model):
     def trim_video_path(self):
         if self.media_type not in ["video", "audio"]:
             return None
-        if self.is_external:
+        if self.is_remote_video_source:
             return None
 
         ret = self.encodings.filter(status="success", profile__extension='mp4', chunk=False).order_by("-profile__resolution").first()
@@ -725,7 +743,7 @@ class Media(models.Model):
     def encodings_info(self, full=False):
         """Property used on serializers"""
 
-        if self.is_external:
+        if self.is_remote_video_source:
             return {}
 
         ret = {}
@@ -816,7 +834,7 @@ class Media(models.Model):
     def original_media_url(self):
         """Property used on serializers"""
 
-        if self.is_external:
+        if self.is_remote_video_source:
             return self.source_url
         if settings.SHOW_ORIGINAL_MEDIA:
             return helpers.url_from_path(self.media_file.path)
@@ -918,7 +936,7 @@ class Media(models.Model):
         """Property used on serializers
         Returns preview url
         """
-        if self.is_external:
+        if self.is_remote_video_source:
             return ""
 
         if self.preview_file_path:
@@ -936,7 +954,7 @@ class Media(models.Model):
         """Property used on serializers
         Returns hls info, curated to be read by video.js
         """
-        if self.is_external:
+        if self.is_remote_video_source:
             return {}
 
         res = {}

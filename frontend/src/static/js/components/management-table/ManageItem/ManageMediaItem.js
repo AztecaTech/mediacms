@@ -200,7 +200,7 @@ export function ManageMediaItem(props) {
         {void 0 === props.media_type ? <i className="non-available">N/A</i> : props.media_type}
       </div>
       <div className="mi-encoding">
-        {'external' === props.source_type ? (
+        {'external' === props.source_type || 'direct' === props.source_type ? (
           <i className="non-available">N/A</i>
         ) : void 0 === props.encoding_status ? (
           <i className="non-available">N/A</i>
