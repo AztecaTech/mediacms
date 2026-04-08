@@ -10,7 +10,8 @@
 .home-promo-carousel__viewport {
     position: relative;
     width: 100%;
-    max-height: min(42vh, 360px);
+    height: clamp(180px, 36vw, 420px);
+    max-height: 52vh;
     background: #111;
 }
 
@@ -22,9 +23,9 @@
 .home-promo-carousel__img {
     display: block;
     width: 100%;
-    height: auto;
-    max-height: min(42vh, 360px);
-    object-fit: cover;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
 }
 
 .home-promo-carousel__nav {
@@ -87,4 +88,21 @@
 .home-promo-carousel__dot:focus-visible {
     background: rgba(0, 0, 0, 0.4);
     outline: none;
+}
+
+@media (max-width: 768px) {
+    .home-promo-carousel__viewport {
+        height: clamp(160px, 46vw, 300px);
+    }
+
+    .home-promo-carousel__nav {
+        width: 2rem;
+        height: 2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .home-promo-carousel__viewport {
+        height: clamp(140px, 52vw, 240px);
+    }
 }
