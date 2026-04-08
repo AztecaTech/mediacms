@@ -10,8 +10,8 @@
 .home-promo-carousel__viewport {
     position: relative;
     width: 100%;
-    height: clamp(180px, 36vw, 420px);
-    max-height: 52vh;
+    height: clamp(120px, 24vw, 260px);
+    max-height: 34vh;
     background: #111;
 }
 
@@ -92,7 +92,7 @@
 
 @media (max-width: 768px) {
     .home-promo-carousel__viewport {
-        height: clamp(160px, 46vw, 300px);
+        height: clamp(110px, 30vw, 220px);
     }
 
     .home-promo-carousel__nav {
@@ -103,6 +103,6 @@
 
 @media (max-width: 480px) {
     .home-promo-carousel__viewport {
-        height: clamp(140px, 52vw, 240px);
+        height: clamp(96px, 34vw, 170px);
     }
 }
