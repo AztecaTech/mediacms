@@ -37,15 +37,15 @@
 
 <body>
 
-    {% if SITE_ANNOUNCEMENT %}
-    <div class="site-announcement" role="region" aria-label="Site announcement">
-        <div class="site-announcement__inner">{{ SITE_ANNOUNCEMENT|linebreaksbr }}</div>
-    </div>
-    {% endif %}
-
     {% block beforecontent %}{% endblock %}
 
+    {# Below fixed .page-header (see PageHeader.scss): must live inside .page-main-wrap so it is not covered. #}
     <div class="page-main-wrap">
+        {% if SITE_ANNOUNCEMENT %}
+        <div class="site-announcement" role="region" aria-label="Site announcement">
+            <div class="site-announcement__inner">{{ SITE_ANNOUNCEMENT|linebreaksbr }}</div>
+        </div>
+        {% endif %}
         {% include "messages.html" %}
         {% block content %}{% endblock %}
     </div>

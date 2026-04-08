@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.db import OperationalError, ProgrammingError
 from django.utils.safestring import mark_safe
 
 from branding.home_promo import home_promo_slides_json
@@ -7,6 +8,19 @@ from cms.version import VERSION
 
 from .frontend_translations import get_translation, get_translation_strings
 from .methods import is_mediacms_editor, is_mediacms_manager
+
+
+def _site_announcement_text():
+    """Read from DB so text is not lost when a stale cached BrandingSettings row lacks the field."""
+    try:
+        val = (
+            BrandingSettings.objects.filter(pk=1)
+            .values_list("site_announcement", flat=True)
+            .first()
+        )
+    except (ProgrammingError, OperationalError):
+        return ""
+    return (val or "").strip()
 
 
 def stuff(request):
@@ -48,7 +62,7 @@ def stuff(request):
     ret["UPLOAD_MAX_FILES_NUMBER"] = settings.UPLOAD_MAX_FILES_NUMBER
     ret["PRE_UPLOAD_MEDIA_MESSAGE"] = settings.PRE_UPLOAD_MEDIA_MESSAGE
     ret["SIDEBAR_FOOTER_TEXT"] = branding.footer_text or settings.SIDEBAR_FOOTER_TEXT
-    ret["SITE_ANNOUNCEMENT"] = (branding.site_announcement or "").strip()
+    ret["SITE_ANNOUNCEMENT"] = _site_announcement_text()
     ret["POST_UPLOAD_AUTHOR_MESSAGE_UNLISTED_NO_COMMENTARY"] = settings.POST_UPLOAD_AUTHOR_MESSAGE_UNLISTED_NO_COMMENTARY
     ret["IS_MEDIACMS_ADMIN"] = request.user.is_superuser
     ret["IS_MEDIACMS_EDITOR"] = is_mediacms_editor(request.user)
