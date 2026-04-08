@@ -80,3 +80,6 @@ class BrandingSettings(models.Model):
             obj, _ = cls.objects.get_or_create(pk=1)
             cache.set(BRANDING_CACHE_KEY, obj, timeout=None)
         return obj
+
+
+from .home_promo import HomePromoSlide  # noqa: E402,F401

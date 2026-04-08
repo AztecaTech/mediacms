@@ -1,5 +1,7 @@
 from django.conf import settings
+from django.utils.safestring import mark_safe
 
+from branding.home_promo import home_promo_slides_json
 from branding.models import BrandingSettings
 from cms.version import VERSION
 
@@ -81,5 +83,7 @@ def stuff(request):
     ret["BRANDING_LOGIN_HERO_URL"] = branding.login_hero_image.url if branding.login_hero_image else ""
     ret["BRANDING_REGISTER_HERO_URL"] = branding.register_hero_image.url if branding.register_hero_image else ""
     ret["BRANDING_NOT_FOUND_URL"] = branding.not_found_image.url if branding.not_found_image else ""
+
+    ret["HOME_PROMO_SLIDES_JSON"] = mark_safe(home_promo_slides_json(request))
 
     return ret

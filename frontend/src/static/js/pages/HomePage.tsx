@@ -5,6 +5,7 @@ import { MediaListRow } from '../components/MediaListRow';
 import { MediaMultiListWrapper } from '../components/MediaMultiListWrapper';
 import { ItemListAsync } from '../components/item-list/ItemListAsync.jsx';
 import { InlineSliderItemListAsync } from '../components/item-list/InlineSliderItemListAsync.jsx';
+import { HomePromoCarousel } from '../components/home/HomePromoCarousel';
 import { Page } from './Page';
 import { translateString } from '../utils/helpers/';
 
@@ -71,6 +72,7 @@ export const HomePage: React.FC<HomePageProps> = ({
           <ApiUrlConsumer>
             {(apiUrl) => (
               <MediaMultiListWrapper className="items-list-ver">
+                <HomePromoCarousel />
                 {PageStore.get('config-enabled').pages.featured &&
                   PageStore.get('config-enabled').pages.featured.enabled && (
                     <MediaListRow

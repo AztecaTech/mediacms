@@ -1,5 +1,7 @@
 """Tests for branding singleton, admin, context, and templates."""
 
+import json
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.core.cache import cache
@@ -9,6 +11,7 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 
 from branding.admin import BrandingSettingsForm
+from branding.home_promo import HomePromoSlide
 from branding.models import BRANDING_CACHE_KEY, BrandingSettings
 from files.context_processors import stuff
 
@@ -280,6 +283,49 @@ class Branding404Tests(TestCase):
             context={"BRANDING_NOT_FOUND_URL": "", "PORTAL_NAME": "Azteca"},
         )
         self.assertNotIn('class="auth-hero"', html)
+
+
+class HomePromoSlidesTests(TestCase):
+    def setUp(self):
+        cache.delete(BRANDING_CACHE_KEY)
+
+    def test_context_processor_emits_empty_array_json(self):
+        request = RequestFactory().get("/")
+        request.user = AnonymousUser()
+        ctx = stuff(request)
+        self.assertEqual(json.loads(str(ctx["HOME_PROMO_SLIDES_JSON"])), [])
+
+    def test_active_slide_in_context_json(self):
+        img = SimpleUploadedFile(
+            "promo.png",
+            b"\x89PNG\r\n\x1a\n" + b"\x00" * 64,
+            content_type="image/png",
+        )
+        HomePromoSlide.objects.create(
+            image=img,
+            alt_text="Tax tips",
+            link_url="https://example.org/promo",
+            sort_order=1,
+        )
+        request = RequestFactory().get("/", HTTP_HOST="testserver")
+        request.user = AnonymousUser()
+        data = json.loads(str(stuff(request)["HOME_PROMO_SLIDES_JSON"]))
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["alt"], "Tax tips")
+        self.assertEqual(data[0]["link"], "https://example.org/promo")
+        self.assertIn("image", data[0])
+        self.assertTrue(data[0]["image"].startswith("http://testserver/media/"))
+
+    def test_inactive_slide_omitted_from_json(self):
+        img = SimpleUploadedFile(
+            "x.png",
+            b"\x89PNG\r\n\x1a\n" + b"\x00" * 64,
+            content_type="image/png",
+        )
+        HomePromoSlide.objects.create(image=img, is_active=False)
+        request = RequestFactory().get("/", HTTP_HOST="testserver")
+        request.user = AnonymousUser()
+        self.assertEqual(json.loads(str(stuff(request)["HOME_PROMO_SLIDES_JSON"])), [])
 
 
 class BrandingEndToEndTests(TestCase):

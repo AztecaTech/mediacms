@@ -5,7 +5,9 @@ from django.contrib import admin
 from django.core.exceptions import ValidationError
 from django.http import HttpResponseRedirect
 from django.urls import reverse
+from django.utils.html import format_html
 
+from .home_promo import HomePromoSlide
 from .models import BrandingSettings
 
 MAX_IMAGE_BYTES = 2 * 1024 * 1024
@@ -71,3 +73,36 @@ class BrandingSettingsAdmin(admin.ModelAdmin):
     def changelist_view(self, request, extra_context=None):
         obj, _ = BrandingSettings.objects.get_or_create(pk=1)
         return HttpResponseRedirect(reverse("admin:branding_brandingsettings_change", args=(obj.pk,)))
+
+
+class HomePromoSlideForm(forms.ModelForm):
+    class Meta:
+        model = HomePromoSlide
+        fields = "__all__"
+
+    def clean_image(self):
+        f = self.cleaned_data.get("image")
+        if f and hasattr(f, "size") and f.size > MAX_IMAGE_BYTES:
+            raise ValidationError(
+                f"File exceeds the 2 MB limit. Uploaded {f.size / (1024 * 1024):.1f} MB."
+            )
+        return f
+
+
+@admin.register(HomePromoSlide)
+class HomePromoSlideAdmin(admin.ModelAdmin):
+    form = HomePromoSlideForm
+    list_display = ("thumbnail_preview", "alt_text", "sort_order", "is_active", "link_url")
+    list_editable = ("sort_order", "is_active")
+    list_filter = ("is_active",)
+    ordering = ("sort_order", "id")
+    search_fields = ("alt_text", "link_url")
+
+    @admin.display(description="Preview")
+    def thumbnail_preview(self, obj):
+        if obj.image:
+            return format_html(
+                '<img src="{}" alt="" style="max-height:48px;max-width:120px;object-fit:cover;" />',
+                obj.image.url,
+            )
+        return "—"
