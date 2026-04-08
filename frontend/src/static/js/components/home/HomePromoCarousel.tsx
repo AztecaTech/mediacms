@@ -1,7 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
-import '../../../css/home-promo-carousel.css';
-
 type PromoSlide = { image: string; link: string; alt: string };
 
 function readSlides(): PromoSlide[] {
