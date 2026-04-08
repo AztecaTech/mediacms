@@ -37,6 +37,12 @@
 
 <body>
 
+    {% if SITE_ANNOUNCEMENT %}
+    <div class="site-announcement" role="region" aria-label="Site announcement">
+        <div class="site-announcement__inner">{{ SITE_ANNOUNCEMENT|linebreaksbr }}</div>
+    </div>
+    {% endif %}
+
     {% block beforecontent %}{% endblock %}
 
     <div class="page-main-wrap">

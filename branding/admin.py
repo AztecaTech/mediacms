@@ -45,7 +45,13 @@ class BrandingSettingsForm(forms.ModelForm):
 class BrandingSettingsAdmin(admin.ModelAdmin):
     form = BrandingSettingsForm
     fieldsets = (
-        ("Identity", {"fields": ("portal_name", "portal_description", "footer_text")}),
+        (
+            "Identity",
+            {
+                "fields": ("portal_name", "portal_description", "footer_text", "site_announcement"),
+                "description": "Site announcement: plain text only; shown above the header on all pages when filled.",
+            },
+        ),
         (
             "Logos",
             {

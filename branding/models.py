@@ -56,6 +56,13 @@ class BrandingSettings(models.Model):
         blank=True,
         help_text="Artwork shown on the 404 page. Max 2 MB.",
     )
+    site_announcement = models.TextField(
+        blank=True,
+        help_text=(
+            "Optional plain-text message at the top of every page. "
+            "Line breaks are preserved. Leave blank to hide."
+        ),
+    )
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:

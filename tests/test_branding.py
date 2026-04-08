@@ -147,6 +147,7 @@ class BrandingContextProcessorTests(TestCase):
         self.assertEqual(context["BRANDING_LOGIN_HERO_URL"], "")
         self.assertEqual(context["BRANDING_REGISTER_HERO_URL"], "")
         self.assertEqual(context["BRANDING_NOT_FOUND_URL"], "")
+        self.assertEqual(context["SITE_ANNOUNCEMENT"], "")
 
     @override_settings(
         PORTAL_NAME="FallbackCMS",
@@ -163,6 +164,13 @@ class BrandingContextProcessorTests(TestCase):
         self.assertEqual(context["PORTAL_NAME"], "Azteca Tax Systems Media")
         self.assertEqual(context["PORTAL_DESCRIPTION"], "Corporate video portal")
         self.assertEqual(context["SIDEBAR_FOOTER_TEXT"], "© Azteca Tax Systems")
+
+    def test_site_announcement_in_context_when_set(self):
+        obj = BrandingSettings.load()
+        obj.site_announcement = "  Maintenance tonight at 10pm.\nDetails in email.  "
+        obj.save()
+        context = stuff(self._request())
+        self.assertEqual(context["SITE_ANNOUNCEMENT"], "Maintenance tonight at 10pm.\nDetails in email.")
 
     def test_logo_image_url_shadows_settings_and_clears_svg(self):
         obj = BrandingSettings.load()
