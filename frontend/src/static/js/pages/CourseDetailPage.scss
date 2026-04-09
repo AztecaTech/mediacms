@@ -1,0 +1,104 @@
+@import './lmsPageShared.scss';
+
+.lms-course-detail {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 0.5rem 2.5rem;
+}
+
+.lms-course-detail__hero {
+  display: grid;
+  gap: 1.25rem;
+  margin-top: 0.25rem;
+
+  @media (min-width: 720px) {
+    grid-template-columns: minmax(0, 320px) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+.lms-course-detail__thumb {
+  border-radius: 12px;
+  overflow: hidden;
+  background: #1a1a2e;
+  aspect-ratio: 16 / 9;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+}
+
+.lms-course-detail__thumb-placeholder {
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #2d3a4f 0%, #1a1a2e 100%);
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.lms-course-detail__title {
+  margin: 0 0 0.35rem;
+  font-size: clamp(1.5rem, 2.5vw, 2rem);
+  line-height: 1.2;
+}
+
+.lms-course-detail__description {
+  margin: 1.5rem 0 0;
+  font-size: 1rem;
+}
+
+.lms-course-detail__outline {
+  margin: 2rem 0 0;
+  padding: 1.15rem 1.25rem 1.25rem;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.lms-course-detail__outline h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.1rem;
+}
+
+.lms-course-detail__module {
+  margin-top: 1rem;
+
+  &:first-of-type {
+    margin-top: 0;
+  }
+}
+
+.lms-course-detail__module-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.lms-course-detail__lessons {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.9rem;
+  line-height: 1.45;
+
+  li {
+    margin-bottom: 0.25rem;
+  }
+}
+
+.lms-course-detail__locked {
+  opacity: 0.65;
+  font-size: 0.82em;
+}
+
+.lms-course-detail__hint {
+  margin: 0.75rem 0 0;
+  font-size: 0.88rem;
+  opacity: 0.85;
+}

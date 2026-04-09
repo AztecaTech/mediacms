@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Page } from './Page';
+import { CoursePlayerSidebar } from '../components/lms/CoursePlayerSidebar';
 import { CourseCommunityHub } from '../components/learning/CourseCommunityHub';
 import { LmsAssignmentSubmitter } from '../components/learning/LmsAssignmentSubmitter';
 import { LmsNotificationsBell } from '../components/learning/LmsNotificationsBell';
@@ -7,6 +7,9 @@ import { LmsQuizTaker } from '../components/learning/LmsQuizTaker';
 import { attachLessonProgressTracker } from '../components/learning/LessonProgressTracker';
 import { lmsCompleteNonVideoLesson, lmsGetCourse, lmsGetJson } from '../utils/helpers/lmsApi';
 import { renderLmsMarkdownToHtml } from '../utils/helpers/renderLmsMarkdown';
+import { Page } from './Page';
+
+import './CoursePlayerPage.scss';
 
 function readSlug() {
   if (typeof window !== 'undefined' && window.MediaCMS && window.MediaCMS.lmsCourseSlug) {
@@ -79,78 +82,28 @@ export function CoursePlayerPage({ id = 'lms_learn' }) {
   };
 
   const videoSrc = pickVideoSrc(media);
+  const activeLessonId = lesson && lesson.id != null ? lesson.id : null;
 
   return (
     <Page id={id}>
-      <div className="lms-page lms-player" style={{ display: 'flex', gap: '1rem' }}>
-        <nav className="lms-sidebar" style={{ minWidth: 220 }}>
-          <h2 className="page-title">Lessons</h2>
-          <p style={{ marginTop: 0 }}>
-            <button
-              type="button"
-              className="link-like"
-              style={{ fontWeight: panel === 'lesson' ? 700 : 400 }}
-              onClick={() => setPanel('lesson')}
-            >
-              Lesson content
-            </button>
-          </p>
-          <p>
-            <button
-              type="button"
-              className="link-like"
-              style={{ fontWeight: panel === 'community' ? 700 : 400 }}
-              onClick={() => setPanel('community')}
-            >
-              Community & grades
-            </button>
-          </p>
-          {course && course.modules
-            ? course.modules.map((m) => (
-                <div key={m.id}>
-                  <strong>{m.title}</strong>
-                  <ul>
-                    {(m.lessons || []).map((les) => (
-                      <li key={les.id}>
-                        <button
-                          type="button"
-                          className="link-like"
-                          onClick={() => {
-                            setPanel('lesson');
-                            openLesson(les);
-                          }}
-                        >
-                          {les.title}
-                          {les.is_locked ? ' (locked)' : ''}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))
-            : null}
-        </nav>
-        <div className="lms-main" style={{ flex: 1 }}>
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'flex-start',
-              flexWrap: 'wrap',
-              gap: '0.5rem',
-              marginBottom: '1rem',
-            }}
-          >
-            <h2 className="page-title" style={{ margin: 0 }}>
-              {course ? course.title : 'Learn'}
-            </h2>
+      <div className="lms-page lms-player">
+        <CoursePlayerSidebar
+          course={course}
+          panel={panel}
+          setPanel={setPanel}
+          activeLessonId={activeLessonId}
+          openLesson={openLesson}
+        />
+        <div className="lms-player__main">
+          <div className="lms-player__main-header">
+            <h2 className="lms-player__main-title">{course ? course.title : 'Learn'}</h2>
             <LmsNotificationsBell />
           </div>
           {error ? <p className="error-message">{error}</p> : null}
           {panel === 'community' && slug ? <CourseCommunityHub slug={slug} course={course} /> : null}
           {panel === 'lesson' ? (
             <>
-              {!lesson ? <p>Select a lesson.</p> : null}
+              {!lesson ? <p className="lms-player__empty">Select a lesson from the list to get started.</p> : null}
               {lesson && (lesson.is_locked || lesson.prerequisite_locked) ? (
                 <p className="error-message">This lesson is locked until prerequisites are met or the module opens.</p>
               ) : null}
@@ -182,10 +135,12 @@ export function CoursePlayerPage({ id = 'lms_learn' }) {
               !(lesson.is_locked || lesson.prerequisite_locked) &&
               lesson.content_type === 'video' ? (
                 <>
-                  <h1>{lesson.title}</h1>
+                  <h3 className="lms-player__lesson-heading">{lesson.title}</h3>
                   {mediaError ? <p className="error-message">{mediaError}</p> : null}
                   {videoSrc ? (
-                    <video ref={videoRef} controls src={videoSrc} style={{ width: '100%', maxHeight: 480 }} />
+                    <div className="lms-player__video-wrap">
+                      <video ref={videoRef} controls src={videoSrc} />
+                    </div>
                   ) : media && media.url ? (
                     <p>
                       No direct video URL in API response.{' '}
@@ -202,10 +157,9 @@ export function CoursePlayerPage({ id = 'lms_learn' }) {
               !(lesson.is_locked || lesson.prerequisite_locked) &&
               lesson.content_type === 'text' ? (
                 <div>
-                  <h1>{lesson.title}</h1>
+                  <h3 className="lms-player__lesson-heading">{lesson.title}</h3>
                   <div
                     className="lms-markdown-body"
-                    style={{ lineHeight: 1.55 }}
                     dangerouslySetInnerHTML={{ __html: renderLmsMarkdownToHtml(lesson.text_body || '') }}
                   />
                   <p style={{ marginTop: 12 }}>
@@ -230,7 +184,7 @@ export function CoursePlayerPage({ id = 'lms_learn' }) {
               lesson.content_type === 'link' &&
               lesson.external_url ? (
                 <div>
-                  <h1>{lesson.title}</h1>
+                  <h3 className="lms-player__lesson-heading">{lesson.title}</h3>
                   <a href={lesson.external_url} target="_blank" rel="noreferrer">
                     {lesson.external_url}
                   </a>
@@ -255,7 +209,7 @@ export function CoursePlayerPage({ id = 'lms_learn' }) {
               !(lesson.is_locked || lesson.prerequisite_locked) &&
               lesson.content_type === 'file' ? (
                 <div>
-                  <h1>{lesson.title}</h1>
+                  <h3 className="lms-player__lesson-heading">{lesson.title}</h3>
                   {lesson.attachment_url ? (
                     <p>
                       <a href={lesson.attachment_url} download>
@@ -282,8 +236,8 @@ export function CoursePlayerPage({ id = 'lms_learn' }) {
                   {progressMsg ? <p className="lms-meta">{progressMsg}</p> : null}
                 </div>
               ) : null}
-              <p>
-                <a href={`/courses/${slug}`}>Course overview</a>
+              <p className="lms-player__footer-nav">
+                <a href={`/courses/${slug}`}>← Course overview</a>
               </p>
             </>
           ) : null}

@@ -1,0 +1,105 @@
+/* Shared LMS learner surfaces (catalog, course detail, player). */
+
+.lms-markdown-body {
+  line-height: 1.6;
+  font-size: 1rem;
+
+  p {
+    margin: 0 0 0.85rem;
+  }
+
+  p:last-child {
+    margin-bottom: 0;
+  }
+
+  code {
+    font-size: 0.9em;
+    padding: 0.1em 0.35em;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.06);
+  }
+}
+
+.lms-pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lms-pill {
+  display: inline-block;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  background: rgba(0, 0, 0, 0.06);
+  color: inherit;
+}
+
+.lms-btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  align-items: center;
+  margin: 1.25rem 0 0;
+}
+
+.lms-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.55rem 1.15rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-decoration: none;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.lms-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.lms-btn--primary {
+  background: var(--lms-accent, #0d6efd);
+  color: #fff;
+  border-color: var(--lms-accent, #0d6efd);
+
+  &:hover:not(:disabled),
+  &:focus-visible:not(:disabled) {
+    filter: brightness(1.06);
+  }
+}
+
+.lms-btn--secondary {
+  background: transparent;
+  color: inherit;
+  border-color: rgba(0, 0, 0, 0.18);
+
+  &:hover:not(:disabled),
+  &:focus-visible:not(:disabled) {
+    background: rgba(0, 0, 0, 0.04);
+  }
+}
+
+.lms-breadcrumb {
+  margin: 0 0 1rem;
+  font-size: 0.88rem;
+  opacity: 0.8;
+
+  a {
+    text-decoration: none;
+
+    &:hover,
+    &:focus {
+      text-decoration: underline;
+    }
+  }
+}

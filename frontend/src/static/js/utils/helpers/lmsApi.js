@@ -91,7 +91,9 @@ export async function lmsPostJson(path, body = {}) {
     body: JSON.stringify(body),
   });
   if (!res.ok) {
-    throw new Error(await parseError(res));
+    const err = new Error(await parseError(res));
+    err.status = res.status;
+    throw err;
   }
   return res.json();
 }
