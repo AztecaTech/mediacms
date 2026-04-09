@@ -4,6 +4,7 @@ import os
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
 from django.core.mail import EmailMessage
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
@@ -190,6 +191,72 @@ def categories(request):
 
     context = {}
     return render(request, "cms/categories.html", context)
+
+
+def lms_courses_catalog(request):
+    context = {"VERSION": VERSION}
+    return render(request, "cms/lms_courses.html", context)
+
+
+def lms_course_detail(request, slug):
+    context = {"VERSION": VERSION, "course_slug": slug}
+    return render(request, "cms/lms_course_detail.html", context)
+
+
+def lms_learn(request, slug):
+    context = {"VERSION": VERSION, "course_slug": slug}
+    return render(request, "cms/lms_learn.html", context)
+
+
+def lms_my_learning(request):
+    context = {"VERSION": VERSION}
+    return render(request, "cms/lms_my_learning.html", context)
+
+
+@login_required
+def lms_teach(request, slug):
+    context = {"VERSION": VERSION, "course_slug": slug}
+    return render(request, "cms/lms_teach.html", context)
+
+
+@login_required
+def lms_teach_certificates(request, slug):
+    context = {"VERSION": VERSION, "course_slug": slug}
+    return render(request, "cms/lms_teach_certificates.html", context)
+
+
+def lms_learning_paths(request):
+    context = {"VERSION": VERSION}
+    return render(request, "cms/lms_paths.html", context)
+
+
+def lms_learning_path_detail(request, slug):
+    context = {"VERSION": VERSION, "path_slug": slug}
+    return render(request, "cms/lms_path_detail.html", context)
+
+
+@login_required
+def lms_my_calendar(request):
+    context = {"VERSION": VERSION}
+    return render(request, "cms/lms_my_calendar.html", context)
+
+
+def lms_my_credentials(request):
+    context = {"VERSION": VERSION}
+    return render(request, "cms/lms_my_credentials.html", context)
+
+
+def lms_my_teaching(request):
+    context = {"VERSION": VERSION}
+    return render(request, "cms/lms_my_teaching.html", context)
+
+
+@login_required
+def lms_org_learning(request):
+    if not getattr(request.user, "is_manager", False):
+        raise PermissionDenied
+    context = {"VERSION": VERSION}
+    return render(request, "cms/lms_org_learning.html", context)
 
 
 def contact(request):

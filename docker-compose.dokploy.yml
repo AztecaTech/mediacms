@@ -1,6 +1,9 @@
 # Dokploy / production-style compose: builds YOUR repo (Dockerfile), not Docker Hub.
 # In Dokploy set "Compose Path" to: ./docker-compose.dokploy.yml
 #
+# The Dockerfile runs `yarn dist` in frontend/ and merges `frontend/dist/static/*` into
+# `static/` so LMS and other React pages work without committing built bundles.
+#
 # Database persistence (critical):
 #   The named volume `mediacms_pgdata` must survive redeploys. If Postgres data is lost on
 #   restart, you get an empty DB every time: admin/users/media gone and default categories

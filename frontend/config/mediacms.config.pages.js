@@ -155,6 +155,66 @@ const PAGES = {
     component: 'ProfileSharedWithMePage',
     global: { profileId: DEV_SAMPLE_DATA.profileId },
   },
+  lms_courses: {
+    id: 'lms_courses',
+    title: 'Courses',
+    component: 'CoursesCatalogPage',
+  },
+  lms_course_detail: {
+    id: 'lms_course_detail',
+    title: 'Course',
+    component: 'CourseDetailPage',
+  },
+  lms_learn: {
+    id: 'lms_learn',
+    title: 'Learn',
+    component: 'CoursePlayerPage',
+  },
+  lms_teach: {
+    id: 'lms_teach',
+    title: 'Edit course',
+    component: 'CourseAuthoringPage',
+  },
+  lms_teach_certificates: {
+    id: 'lms_teach_certificates',
+    title: 'Course certificates',
+    component: 'CourseCertificatesAdminPage',
+  },
+  lms_paths: {
+    id: 'lms_paths',
+    title: 'Learning paths',
+    component: 'LearningPathsCatalogPage',
+  },
+  lms_path_detail: {
+    id: 'lms_path_detail',
+    title: 'Learning path',
+    component: 'LearningPathDetailPage',
+  },
+  lms_my_learning: {
+    id: 'lms_my_learning',
+    title: 'My learning',
+    component: 'StudentDashboardPage',
+  },
+  lms_my_calendar: {
+    id: 'lms_my_calendar',
+    title: 'My calendar',
+    component: 'MyCalendarPage',
+  },
+  lms_my_credentials: {
+    id: 'lms_my_credentials',
+    title: 'My credentials',
+    component: 'LearnerCredentialsPage',
+  },
+  lms_my_teaching: {
+    id: 'lms_my_teaching',
+    title: 'My teaching',
+    component: 'InstructorDashboardPage',
+  },
+  lms_org_learning: {
+    id: 'lms_org_learning',
+    title: 'Org learning',
+    component: 'OrgManagerLearningPage',
+  },
 };
 
 const STATIC_PAGES = {

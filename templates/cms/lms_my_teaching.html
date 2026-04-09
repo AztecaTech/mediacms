@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block headtitle %}My teaching - {{PORTAL_NAME}}{% endblock headtitle %}
+
+{% block content %}<div id="page-lms_my_teaching"></div>{% endblock %}
+
+{% block bottomimports %}
+<script src="{% static "js/lms_my_teaching.js" %}?v={{ VERSION }}"></script>
+{% endblock bottomimports %}

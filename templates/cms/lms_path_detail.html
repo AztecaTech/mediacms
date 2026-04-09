@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block headtitle %}Learning path - {{PORTAL_NAME}}{% endblock headtitle %}
+
+{% block content %}
+<script>window.MediaCMS = window.MediaCMS || {}; window.MediaCMS.lmsPathSlug = "{{ path_slug|escapejs }}";</script>
+<div id="page-lms_path_detail"></div>
+{% endblock %}
+
+{% block bottomimports %}
+<script src="{% static "js/lms_path_detail.js" %}?v={{ VERSION }}"></script>
+{% endblock bottomimports %}

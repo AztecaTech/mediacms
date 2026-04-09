@@ -9,7 +9,7 @@
 **/.npm
 **/.cache
 **/.parcel-cache
-**/dist
+# Do not use **/dist — it excludes frontend/packages/scripts/dist (mediacms-scripts runtime).
 **/build
 **/*.tsbuildinfo
 

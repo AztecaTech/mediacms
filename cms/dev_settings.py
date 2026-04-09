@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     "saml_auth.apps.SamlAuthConfig",
     "corsheaders",
     "tinymce",
+    "learning.apps.LearningConfig",
 ]
 
 MIDDLEWARE = [
@@ -55,3 +56,6 @@ DEBUG = True
 CORS_ORIGIN_ALLOW_ALL = True
 STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),)
 STATIC_ROOT = os.path.join(BASE_DIR, 'static_collected')
+
+# Required by cms.celery when this module is used as DJANGO_SETTINGS_MODULE (e.g. docker dev).
+CELERY_BEAT_SCHEDULE = {}

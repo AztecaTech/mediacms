@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block headtitle %}Certificates - {{PORTAL_NAME}}{% endblock headtitle %}
+
+{% block content %}
+<script>window.MediaCMS = window.MediaCMS || {}; window.MediaCMS.lmsCourseSlug = "{{ course_slug|escapejs }}";</script>
+<div id="page-lms_teach_certificates"></div>
+{% endblock %}
+
+{% block bottomimports %}
+<script src="{% static "js/lms_teach_certificates.js" %}?v={{ VERSION }}"></script>
+{% endblock bottomimports %}

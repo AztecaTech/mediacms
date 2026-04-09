@@ -23,6 +23,23 @@ RUN mkdir -p /home/mediacms.io/bento4 && \
     rm -rf /home/mediacms.io/bento4/docs && \
     rm Bento4-SDK-1-6-0-637.x86_64-unknown-linux.zip
 
+############ FRONTEND (React pages + LMS bundles → Django static/) ############
+# Ensures Dokploy/docker builds ship current JS/CSS without committing frontend/dist.
+# Output layout matches deploy/scripts/build_and_deploy.sh: frontend/dist/static/* → static/
+FROM node:22-bookworm-slim AS frontend-dist
+WORKDIR /app/frontend
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 \
+    make \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
+COPY frontend/ ./
+# Node image ships a `yarn` binary; do not `npm i -g yarn` (EEXIST on recent images).
+RUN yarn install --frozen-lockfile --network-timeout 600000 \
+    && yarn run dist \
+    && test -d dist/static/js \
+    && test "$(find dist/static/js -name '*.js' | wc -l)" -ge 1
+
 ############ BASE RUNTIME IMAGE ############
 FROM python:3.13.5-slim-bookworm AS base
 
@@ -85,6 +102,9 @@ COPY --from=build-image /home/mediacms.io/bento4 /home/mediacms.io/bento4
 # Copy application files
 COPY . /home/mediacms.io/mediacms
 WORKDIR /home/mediacms.io/mediacms
+
+# Overlay webpack-built assets (LMS pages, catalog, etc.) into Django STATIC_ROOT tree
+COPY --from=frontend-dist /app/frontend/dist/static/ /home/mediacms.io/mediacms/static/
 
 # Preserve default media assets so they survive volume mounts
 RUN mkdir -p /home/mediacms.io/mediacms/media_files_defaults && \

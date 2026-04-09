@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block headtitle %}Edit course - {{PORTAL_NAME}}{% endblock headtitle %}
+
+{% block content %}
+<script>window.MediaCMS = window.MediaCMS || {}; window.MediaCMS.lmsCourseSlug = "{{ course_slug|escapejs }}";</script>
+<div id="page-lms_teach"></div>
+{% endblock %}
+
+{% block bottomimports %}
+<script src="{% static "js/lms_teach.js" %}?v={{ VERSION }}"></script>
+{% endblock bottomimports %}

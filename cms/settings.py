@@ -170,6 +170,31 @@ REST_FRAMEWORK = {
     ],
 }
 
+# LMS (learning app)
+LMS_COMPLETION_THRESHOLD = 90
+LMS_HEARTBEAT_INTERVAL_SECONDS = 10
+LMS_MAX_QUIZ_ATTEMPT_MINUTES = 180
+LMS_CERTIFICATE_GENERATOR = "reportlab"
+LMS_CERTIFICATE_ASYNC_ISSUE = False
+LMS_WEBHOOK_ASYNC_DISPATCH = False
+LMS_WEBHOOK_MAX_RETRIES = 3
+LMS_LTI_JWKS_KEYS = []
+# LTI 1.3 platform registrations (issuer must match platform OIDC issuer).
+# Example:
+# LMS_LTI_PLATFORMS = [
+#     {
+#         "issuer": "https://canvas.instructure.com",
+#         "client_id": "10000000000001",
+#         "authorization_endpoint": "https://canvas.instructure.com/api/lti/authorize_redirect",
+#         "jwks_uri": "https://canvas.instructure.com/api/lti/security/jwks",
+#         "tool_redirect_uri": "https://your-site.example/api/v1/lti/launch/",
+#     }
+# ]
+LMS_LTI_PLATFORMS = []
+LMS_LTI_JWT_LEEWAY_SECONDS = 60
+LMS_ANNOUNCEMENT_EMAIL_ASYNC = True
+LMS_DISCUSSION_SUBSCRIPTION_EMAIL_ASYNC = True
+
 
 SECRET_KEY = "2dii4cog7k=5n37$fz)8dst)kg(s3&10)^qa*gv(kk+nv-z&cu"
 # TODO: this needs to be changed!
@@ -311,6 +336,7 @@ INSTALLED_APPS = [
     "allauth.socialaccount.providers.saml",
     "saml_auth.apps.SamlAuthConfig",
     "tinymce",
+    "learning.apps.LearningConfig",
 ]
 
 MIDDLEWARE = [
@@ -444,6 +470,34 @@ CELERY_BEAT_SCHEDULE = {
     "update_listings_thumbnails": {
         "task": "update_listings_thumbnails",
         "schedule": crontab(minute=2, hour="*/30"),
+    },
+    "lms_rollup_course_metrics_daily": {
+        "task": "learning.tasks.rollup_course_metrics_daily_task",
+        "schedule": crontab(minute=20, hour=1),
+    },
+    "lms_retry_due_webhook_deliveries": {
+        "task": "learning.tasks.retry_due_webhook_deliveries_task",
+        "schedule": crontab(minute="*/10"),
+    },
+    "lms_expire_overdue_quiz_attempts": {
+        "task": "learning.tasks.expire_overdue_quiz_attempts_task",
+        "schedule": crontab(minute="*/5"),
+    },
+    "lms_send_discussion_digest_emails": {
+        "task": "learning.tasks.send_discussion_digest_email_task",
+        "schedule": crontab(minute=30, hour=1),
+    },
+    "lms_regenerate_missing_certificate_pdfs": {
+        "task": "learning.tasks.regenerate_missing_certificate_pdfs_task",
+        "schedule": crontab(minute=40, hour=2, day_of_week=0),
+    },
+    "lms_refresh_lesson_metrics": {
+        "task": "learning.tasks.refresh_lesson_metrics_task",
+        "schedule": crontab(minute=25, hour=2),
+    },
+    "lms_recompute_risk_scores": {
+        "task": "learning.tasks.recompute_risk_scores_task",
+        "schedule": crontab(minute=35, hour=2),
     },
 }
 # TODO: beat, delete chunks from media root

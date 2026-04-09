@@ -77,3 +77,7 @@ The `feat/external-video-embed` branch should land before Phase 1 begins — it 
 ## Next action
 
 Start with **Phase 1**. Use the `writing-plans` skill against [`2026-04-08-lms-phase-1-foundation.md`](2026-04-08-lms-phase-1-foundation.md) to produce an executable implementation plan with per-task file paths and code sketches (matching the style of the existing `2026-04-02-external-video-embed.md` plan), then execute on `feat/lms-phase-1-foundation`.
+
+## Implementation progress (rolling)
+
+Phase 1 is implemented in the `learning/` app; Phases 2–8 are partially implemented or in progress. See **[`2026-04-08-lms-implementation-status.md`](2026-04-08-lms-implementation-status.md)** for a living checklist of what is shipped vs still missing relative to each phase document. Use that file (not this roadmap) for day-to-day delivery tracking; phase specs above remain authoritative for full academic LMS scope.
