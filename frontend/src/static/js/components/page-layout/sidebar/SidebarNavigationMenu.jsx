@@ -129,6 +129,63 @@ export function SidebarNavigationMenu() {
     return items.length ? <NavigationMenuList key="main-first" items={formatItems(items)} /> : null;
   }
 
+  function LmsMenuSection() {
+    const linkDefs = [
+      {
+        link: '/courses',
+        icon: 'school',
+        text: translateString('Courses'),
+        className: 'nav-item-lms-courses',
+      },
+      {
+        link: '/learning-paths',
+        icon: 'timeline',
+        text: translateString('Learning paths'),
+        className: 'nav-item-lms-paths',
+      },
+    ];
+
+    if (!isAnonymous) {
+      linkDefs.push(
+        {
+          link: '/my/learning',
+          icon: 'menu_book',
+          text: translateString('My learning'),
+          className: 'nav-item-lms-my-learning',
+        },
+        {
+          link: '/my/calendar',
+          icon: 'event',
+          text: translateString('My calendar'),
+          className: 'nav-item-lms-calendar',
+        },
+        {
+          link: '/my/credentials',
+          icon: 'workspace_premium',
+          text: translateString('Credentials'),
+          className: 'nav-item-lms-credentials',
+        },
+        {
+          link: '/my/teaching',
+          icon: 'edit_note',
+          text: translateString('My teaching'),
+          className: 'nav-item-lms-teaching',
+        },
+      );
+    }
+
+    const items = [
+      {
+        itemType: 'label',
+        text: translateString('Learning'),
+        buttonAttr: { type: 'button' },
+      },
+      ...formatItems(linkDefs),
+    ];
+
+    return <NavigationMenuList key="lms" items={items} />;
+  }
+
   function MainMenuSecondSection() {
     const items = [];
 
@@ -259,5 +316,12 @@ export function SidebarNavigationMenu() {
     return items.length ? <NavigationMenuList key="admin" items={formatItems(items)} /> : null;
   }
 
-  return [MainMenuFirstSection(), MainMenuSecondSection(), UserMenuSection(), CustomMenuSection(), AdminMenuSection()];
+  return [
+    MainMenuFirstSection(),
+    LmsMenuSection(),
+    MainMenuSecondSection(),
+    UserMenuSection(),
+    CustomMenuSection(),
+    AdminMenuSection(),
+  ];
 }

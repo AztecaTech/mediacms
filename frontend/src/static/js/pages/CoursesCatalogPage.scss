@@ -1,0 +1,30 @@
+.lms-catalog {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 0.5rem 2rem;
+}
+
+.lms-catalog__intro {
+  margin: 0 0 1.25rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  opacity: 0.85;
+}
+
+.lms-catalog__grid {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  margin: 1.5rem 0 2rem;
+}
+
+.lms-catalog__footer-links {
+  margin-top: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  font-size: 0.95rem;
+
+  a {
+    font-weight: 500;
+  }
+}

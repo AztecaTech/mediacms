@@ -612,6 +612,60 @@ USE_RBAC = False
 USE_IDENTITY_PROVIDERS = False
 JAZZMIN_UI_TWEAKS = {"theme": "flatly"}
 
+# Collapsed app menus by default, icons, and quick search — the Learning app has many models.
+JAZZMIN_SETTINGS = {
+    "site_title": f"{PORTAL_NAME} Admin",
+    "site_header": PORTAL_NAME,
+    "site_brand": PORTAL_NAME,
+    "navigation_expanded": False,
+    "search_model": ["learning.Course", "auth.User"],
+    "topmenu_links": [
+        {"name": "Site home", "url": "/", "new_window": True},
+        {"model": "learning.course"},
+        {"model": "learning.enrollment"},
+        {"model": "files.media"},
+    ],
+    "icons": {
+        "learning": "fas fa-graduation-cap",
+        "learning.course": "fas fa-book",
+        "learning.module": "fas fa-layer-group",
+        "learning.lesson": "fas fa-book-open",
+        "learning.cohort": "fas fa-users",
+        "learning.enrollment": "fas fa-user-check",
+        "learning.lessonprogress": "fas fa-tasks",
+        "learning.learningpath": "fas fa-route",
+        "learning.lessondraft": "fas fa-file-alt",
+        "learning.courseauditlog": "fas fa-history",
+        "learning.questionbank": "fas fa-database",
+        "learning.quiz": "fas fa-question-circle",
+        "learning.question": "fas fa-question",
+        "learning.quizattempt": "fas fa-clipboard-check",
+        "learning.answer": "fas fa-check",
+        "learning.assignment": "fas fa-file-upload",
+        "learning.submission": "fas fa-inbox",
+        "learning.gradecategory": "fas fa-percentage",
+        "learning.grade": "fas fa-star-half-alt",
+        "learning.rubric": "fas fa-list-ol",
+        "learning.rubricscore": "fas fa-pen",
+        "learning.lettergradescheme": "fas fa-font",
+        "learning.discussion": "fas fa-comments",
+        "learning.discussionpost": "fas fa-comment",
+        "learning.announcement": "fas fa-bullhorn",
+        "learning.notification": "fas fa-bell",
+        "learning.discussionnotificationpreference": "fas fa-envelope",
+        "learning.certificatetemplate": "fas fa-certificate",
+        "learning.certificateissuancepolicy": "fas fa-clipboard-list",
+        "learning.certificate": "fas fa-award",
+        "learning.badge": "fas fa-medal",
+        "learning.badgeaward": "fas fa-trophy",
+        "learning.webhook": "fas fa-plug",
+        "learning.webhookdelivery": "fas fa-paper-plane",
+        "learning.analyticsevent": "fas fa-chart-line",
+        "learning.coursemetricsdaily": "fas fa-chart-bar",
+        "learning.ldapdirectorysource": "fas fa-server",
+    },
+}
+
 USE_ROUNDED_CORNERS = True
 
 ALLOW_VIDEO_TRIMMER = True
