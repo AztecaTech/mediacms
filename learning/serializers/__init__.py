@@ -1,5 +1,6 @@
 from learning.serializers.core import (
     CohortSerializer,
+    CourseDetailSerializer,
     CourseListSerializer,
     CourseWriteSerializer,
     EnrollmentSerializer,
@@ -13,6 +14,7 @@ from learning.serializers.core import (
 
 __all__ = [
     "CohortSerializer",
+    "CourseDetailSerializer",
     "CourseListSerializer",
     "CourseWriteSerializer",
     "EnrollmentSerializer",
