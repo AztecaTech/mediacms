@@ -1,5 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Page } from './Page';
 import { lmsMyCalendar } from '../utils/helpers/lmsApi';
+
+import './MyCalendarPage.scss';
 
 function monthRangeUtcIso(d) {
   const start = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1, 0, 0, 0));
@@ -12,13 +15,20 @@ function monthRangeUtcIso(d) {
 
 function formatWhen(ev) {
   if (!ev.starts_at) {
-    return 'Date TBD';
+    return 'Date to be announced';
   }
   try {
     return new Date(ev.starts_at).toLocaleString();
   } catch {
     return ev.starts_at;
   }
+}
+
+function formatEventType(t) {
+  if (!t || typeof t !== 'string') {
+    return '';
+  }
+  return t.replace(/_/g, ' ');
 }
 
 export function MyCalendarPage({ id = 'lms_my_calendar' }) {
@@ -53,53 +63,61 @@ export function MyCalendarPage({ id = 'lms_my_calendar' }) {
   };
 
   return (
-    <div id={id} style={{ maxWidth: 720, margin: '0 auto', padding: '1rem' }}>
-      <h1 style={{ marginTop: 0 }}>My calendar</h1>
-      <p className="lms-meta" style={{ marginBottom: '1rem' }}>
-        Due dates and milestones from your active enrollments ({label}, UTC month window).
-      </p>
-      <div style={{ display: 'flex', gap: 8, marginBottom: '1rem', flexWrap: 'wrap' }}>
-        <button type="button" className="button-link" onClick={() => shiftMonth(-1)}>
-          ← Previous month
-        </button>
-        <button type="button" className="button-link" onClick={() => shiftMonth(1)}>
-          Next month →
-        </button>
+    <Page id={id}>
+      <div className="lms-page lms-shell">
+        <h1 className="page-title">My calendar</h1>
+        <p className="lms-intro">
+          See due dates and milestones from your active courses. Times use a <strong>UTC month window</strong> for{' '}
+          {label}.
+        </p>
+        <div className="lms-calendar-toolbar">
+          <button type="button" className="lms-btn lms-btn--secondary lms-btn--sm" onClick={() => shiftMonth(-1)}>
+            ← Previous month
+          </button>
+          <button type="button" className="lms-btn lms-btn--secondary lms-btn--sm" onClick={() => shiftMonth(1)}>
+            Next month →
+          </button>
+        </div>
+        {loading ? <p className="lms-meta">Loading your calendar…</p> : null}
+        {err ? (
+          <p className="error-message" style={{ whiteSpace: 'pre-line' }}>
+            We couldn&apos;t load your calendar. {err}
+          </p>
+        ) : null}
+        {!loading && !err && !events.length ? (
+          <p className="lms-empty-hint">
+            Nothing scheduled in this month. Try another month, or{' '}
+            <a href="/my/learning">return to My learning</a> to keep making progress.
+          </p>
+        ) : null}
+        <ul className="lms-event-list">
+          {events.map((ev) => (
+            <li key={ev.id} className="lms-event-card">
+              <div className="lms-event-card__title">{ev.title}</div>
+              <div className="lms-event-card__meta">
+                {ev.course_title}
+                {ev.course_slug ? <span> · {ev.course_slug}</span> : null}
+              </div>
+              <div className="lms-event-card__meta">
+                {formatWhen(ev)} · {formatEventType(ev.event_type)}
+              </div>
+              {ev.description ? <p className="lms-event-card__desc">{ev.description}</p> : null}
+              {ev.url ? (
+                <a className="lms-event-card__link" href={ev.url}>
+                  Open in course
+                </a>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+        <nav className="lms-footer-links" aria-label="Related pages">
+          <a href="/my/learning">My learning</a>
+          {' · '}
+          <a href="/courses">Browse courses</a>
+          {' · '}
+          <a href="/my/credentials">My credentials</a>
+        </nav>
       </div>
-      {loading ? <p>Loading…</p> : null}
-      {err ? <p className="error-message" style={{ whiteSpace: 'pre-line' }}>{err}</p> : null}
-      {!loading && !err && !events.length ? <p>No events in this range.</p> : null}
-      <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-        {events.map((ev) => (
-          <li
-            key={ev.id}
-            style={{
-              marginBottom: '0.75rem',
-              padding: '0.75rem',
-              border: '1px solid #e5e7eb',
-              borderRadius: 8,
-              background: '#fafafa',
-            }}
-          >
-            <div style={{ fontWeight: 600 }}>{ev.title}</div>
-            <div className="lms-meta" style={{ fontSize: 13 }}>
-              {ev.course_title}{' '}
-              <span style={{ opacity: 0.85 }}>({ev.course_slug})</span>
-            </div>
-            <div className="lms-meta" style={{ fontSize: 13 }}>
-              {formatWhen(ev)} · {ev.event_type.replace(/_/g, ' ')}
-            </div>
-            {ev.description ? (
-              <p style={{ fontSize: 13, margin: '0.35rem 0 0', whiteSpace: 'pre-wrap' }}>{ev.description}</p>
-            ) : null}
-            {ev.url ? (
-              <a href={ev.url} style={{ fontSize: 13 }}>
-                Open course
-              </a>
-            ) : null}
-          </li>
-        ))}
-      </ul>
-    </div>
+    </Page>
   );
 }

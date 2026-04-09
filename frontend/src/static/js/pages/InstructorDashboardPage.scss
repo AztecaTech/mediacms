@@ -1,0 +1,8 @@
+@import './lmsPageShared.scss';
+
+.lms-my-teaching .lms-teach-course-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 0 0 1.25rem;
+}

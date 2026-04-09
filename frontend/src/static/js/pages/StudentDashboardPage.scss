@@ -1,0 +1,8 @@
+@import './lmsPageShared.scss';
+
+.lms-my-learning .lms-dash-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin: 0 0 1rem;
+}

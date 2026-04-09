@@ -103,3 +103,383 @@
     }
   }
 }
+
+/* Page shell + section rhythm (dashboards, paths, etc.) */
+
+.lms-shell {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 0.5rem 2.5rem;
+}
+
+.lms-shell--wide {
+  max-width: 1120px;
+}
+
+.lms-page-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-bottom: 1.25rem;
+}
+
+.lms-page-head__title {
+  margin: 0;
+}
+
+.lms-intro {
+  margin: 0 0 1.25rem;
+  font-size: 0.98rem;
+  line-height: 1.5;
+  opacity: 0.88;
+  max-width: 52rem;
+}
+
+.lms-section {
+  margin-top: 2rem;
+
+  &:first-of-type {
+    margin-top: 0;
+  }
+}
+
+.lms-section__title {
+  margin: 0 0 0.75rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.lms-grid-cards {
+  display: grid;
+  gap: 1.1rem;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  margin: 0 0 1.5rem;
+}
+
+.lms-footer-links {
+  margin-top: 1.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  font-size: 0.95rem;
+
+  a {
+    font-weight: 500;
+  }
+}
+
+/* Enrollment / teaching cards */
+
+.lms-dash-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 1rem 1.1rem 1.1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.lms-dash-card__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.lms-dash-card__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.3;
+
+  a {
+    color: inherit;
+    text-decoration: none;
+
+    &:hover,
+    &:focus {
+      text-decoration: underline;
+    }
+  }
+}
+
+.lms-dash-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.lms-btn--sm {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.82rem;
+  border-radius: 6px;
+}
+
+.lms-progress {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.lms-progress__fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--lms-accent, #0d6efd);
+  transition: width 0.25s ease;
+}
+
+.lms-progress__label {
+  margin: 0.35rem 0 0;
+  font-size: 0.8rem;
+  opacity: 0.75;
+}
+
+.lms-empty-hint {
+  margin: 0;
+  padding: 1.5rem 1rem;
+  text-align: center;
+  border-radius: 12px;
+  border: 1px dashed rgba(0, 0, 0, 0.12);
+  font-size: 0.95rem;
+  opacity: 0.88;
+}
+
+/* Compact data table (rosters, etc.) */
+
+.lms-table-wrap {
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  margin-top: 0.5rem;
+}
+
+.lms-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+
+  th,
+  td {
+    padding: 0.5rem 0.65rem;
+    text-align: left;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  }
+
+  th {
+    font-weight: 700;
+    background: rgba(0, 0, 0, 0.03);
+  }
+
+  tr:last-child td {
+    border-bottom: 0;
+  }
+}
+
+.lms-hint-box {
+  margin: 0 0 1.25rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  background: rgba(13, 110, 253, 0.08);
+  border: 1px solid rgba(13, 110, 253, 0.15);
+}
+
+.lms-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Tabs (credentials, etc.) */
+
+.lms-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 1rem 0 1.25rem;
+  padding: 0.35rem;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.lms-tab {
+  padding: 0.45rem 0.95rem;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+  color: inherit;
+
+  &.is-active {
+    background: var(--page-main-content-bg-color, #fff);
+    border-color: rgba(0, 0, 0, 0.08);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  }
+}
+
+/* Calendar */
+
+.lms-calendar-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 1.15rem;
+}
+
+.lms-event-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.lms-event-card {
+  padding: 0.9rem 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.lms-event-card__title {
+  font-weight: 700;
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+}
+
+.lms-event-card__meta {
+  font-size: 0.82rem;
+  opacity: 0.82;
+  margin: 0.2rem 0 0;
+  line-height: 1.4;
+}
+
+.lms-event-card__desc {
+  font-size: 0.88rem;
+  margin: 0.5rem 0 0;
+  white-space: pre-wrap;
+  line-height: 1.45;
+}
+
+.lms-event-card__link {
+  display: inline-block;
+  margin-top: 0.5rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+/* Section divider */
+
+.lms-divider {
+  margin: 2rem 0;
+  border: 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* Forms (authoring, certificates) */
+
+.lms-form-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.lms-form-stack label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.lms-input,
+.lms-textarea,
+.lms-select {
+  width: 100%;
+  max-width: 560px;
+  padding: 0.5rem 0.6rem;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  font-size: 0.92rem;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.lms-select {
+  max-width: 320px;
+}
+
+.lms-textarea--code {
+  max-width: 100%;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.lms-textarea--grow {
+  min-height: 6rem;
+}
+
+.lms-authoring-grid {
+  display: grid;
+  gap: 1.25rem;
+
+  @media (min-width: 900px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.lms-lesson-picker {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.lms-lesson-picker li {
+  margin-bottom: 0.35rem;
+}
+
+.lms-lesson-picker__btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.4rem 0.5rem;
+  border-radius: 8px;
+  border: 0;
+  background: transparent;
+  font-size: 0.88rem;
+  cursor: pointer;
+  color: inherit;
+  line-height: 1.35;
+
+  &:hover,
+  &:focus-visible {
+    background: rgba(0, 0, 0, 0.05);
+  }
+
+  &.is-active {
+    background: rgba(13, 110, 253, 0.1);
+    font-weight: 700;
+  }
+}
+
+.lms-help-text {
+  margin: 0.5rem 0 0;
+  font-size: 0.8rem;
+  opacity: 0.75;
+  line-height: 1.4;
+}

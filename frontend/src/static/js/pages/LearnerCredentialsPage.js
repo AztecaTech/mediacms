@@ -3,6 +3,14 @@ import { LmsNotificationsBell } from '../components/learning/LmsNotificationsBel
 import { Page } from './Page';
 import { lmsMyBadges, lmsMyCertificates, lmsMyTranscript } from '../utils/helpers/lmsApi';
 
+import './LearnerCredentialsPage.scss';
+
+const TABS = [
+  { key: 'certificates', label: 'Certificates' },
+  { key: 'badges', label: 'Badges' },
+  { key: 'transcript', label: 'Transcript' },
+];
+
 export function LearnerCredentialsPage({ id = 'lms_my_credentials' }) {
   const [tab, setTab] = useState('certificates');
   const [certs, setCerts] = useState([]);
@@ -41,143 +49,153 @@ export function LearnerCredentialsPage({ id = 'lms_my_credentials' }) {
 
   return (
     <Page id={id}>
-      <div className="lms-page lms-my-credentials">
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'flex-start',
-            flexWrap: 'wrap',
-            gap: '0.5rem',
-          }}
-        >
-          <h1 className="page-title" style={{ margin: 0 }}>
-            My credentials
-          </h1>
+      <div className="lms-page lms-my-credentials lms-shell lms-shell--wide">
+        <header className="lms-page-head">
+          <h1 className="page-title lms-page-head__title">My credentials</h1>
           <LmsNotificationsBell />
-        </div>
-        <p className="lms-meta" style={{ marginTop: 8 }}>
-          <a href="/my/learning">My learning</a>
-          {' · '}
-          <a href="/courses">Browse courses</a>
+        </header>
+        <p className="lms-intro">
+          Certificates, badges, and your learning transcript stay here. Finish courses and assessments to populate
+          this page.
         </p>
-        {error ? <p className="error-message">{error}</p> : null}
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '1rem 0' }}>
-          {['certificates', 'badges', 'transcript'].map((key) => (
+        {error ? (
+          <p className="error-message">We couldn&apos;t load your credentials. {error}</p>
+        ) : null}
+
+        <div className="lms-tabs" role="tablist" aria-label="Credential views">
+          {TABS.map((t) => (
             <button
-              key={key}
+              key={t.key}
               type="button"
-              className="button-link"
-              style={{ fontWeight: tab === key ? 700 : 400 }}
-              onClick={() => setTab(key)}
+              role="tab"
+              aria-selected={tab === t.key}
+              className={'lms-tab' + (tab === t.key ? ' is-active' : '')}
+              onClick={() => setTab(t.key)}
             >
-              {key === 'certificates' ? 'Certificates' : key === 'badges' ? 'Badges' : 'Transcript'}
+              {t.label}
             </button>
           ))}
         </div>
-        {loading ? <p>Loading…</p> : null}
+
+        {loading ? <p className="lms-meta">Loading…</p> : null}
+
         {!loading && tab === 'certificates' ? (
-          <section>
-            {!certs.length ? <p>No certificates yet.</p> : null}
-            <ul style={{ listStyle: 'none', padding: 0 }}>
+          <section className="lms-section" aria-labelledby="lms-certs-heading">
+            <h2 id="lms-certs-heading" className="lms-section__title">
+              Certificates
+            </h2>
+            {!certs.length ? (
+              <p className="lms-empty-hint">
+                You don&apos;t have any certificates yet. Complete eligible courses to earn them, or{' '}
+                <a href="/courses">browse courses</a>.
+              </p>
+            ) : null}
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
               {certs.map((row) => (
-                <li
-                  key={row.id}
-                  style={{
-                    border: '1px solid #e5e7eb',
-                    borderRadius: 8,
-                    padding: 12,
-                    marginBottom: 10,
-                  }}
-                >
-                  <strong>{row.course_title}</strong>
-                  <div className="lms-meta" style={{ fontSize: 13 }}>
-                    Issued {row.issued_at ? new Date(row.issued_at).toLocaleString() : ''}
+                <li key={row.id} className="lms-credential-card">
+                  <h3 className="lms-credential-card__title">{row.course_title}</h3>
+                  <div className="lms-meta" style={{ fontSize: '0.88rem' }}>
+                    Issued {row.issued_at ? new Date(row.issued_at).toLocaleString() : '—'}
                     {row.revoked_at ? ' · Revoked' : ''}
                   </div>
-                  <div style={{ fontSize: 13, marginTop: 6 }}>
-                    Code: <code>{row.verification_code}</code>
+                  <div className="lms-credential-card__actions">
+                    Verification code: <code>{row.verification_code}</code>
                     {' · '}
                     <a href={`/api/v1/verify/${encodeURIComponent(row.verification_code)}/`} target="_blank" rel="noreferrer">
-                      Verification (JSON)
+                      Verify (JSON)
                     </a>
                   </div>
                   {row.pdf_url ? (
-                    <p style={{ margin: '8px 0 0' }}>
-                      <a href={row.pdf_url} target="_blank" rel="noreferrer">
+                    <p style={{ margin: '0.65rem 0 0' }}>
+                      <a className="lms-btn lms-btn--primary lms-btn--sm" href={row.pdf_url} target="_blank" rel="noreferrer">
                         Download PDF
                       </a>
                     </p>
                   ) : (
-                    <p className="lms-meta" style={{ marginTop: 6 }}>
-                      PDF not available yet.
-                    </p>
+                    <p className="lms-help-text">A PDF will appear here when your certificate file is ready.</p>
                   )}
                 </li>
               ))}
             </ul>
           </section>
         ) : null}
+
         {!loading && tab === 'badges' ? (
-          <section>
-            {!badges.length ? <p>No badges yet.</p> : null}
-            <ul style={{ listStyle: 'none', padding: 0 }}>
+          <section className="lms-section" aria-labelledby="lms-badges-heading">
+            <h2 id="lms-badges-heading" className="lms-section__title">
+              Badges
+            </h2>
+            {!badges.length ? (
+              <p className="lms-empty-hint">
+                No badges yet. They appear when your organization awards them for milestones or achievements.
+              </p>
+            ) : null}
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
               {badges.map((row) => (
-                <li
-                  key={row.id}
-                  style={{
-                    border: '1px solid #e5e7eb',
-                    borderRadius: 8,
-                    padding: 12,
-                    marginBottom: 10,
-                  }}
-                >
-                  <strong>{row.badge_name}</strong>
-                  <div className="lms-meta" style={{ fontSize: 13 }}>
+                <li key={row.id} className="lms-credential-card">
+                  <h3 className="lms-credential-card__title">{row.badge_name}</h3>
+                  <div className="lms-meta" style={{ fontSize: '0.88rem' }}>
                     {row.badge_slug} · {row.awarded_at ? new Date(row.awarded_at).toLocaleString() : ''}
                   </div>
-                  {row.badge_description ? <p style={{ fontSize: 13, marginTop: 6 }}>{row.badge_description}</p> : null}
+                  {row.badge_description ? <p style={{ fontSize: '0.9rem', marginTop: '0.5rem' }}>{row.badge_description}</p> : null}
                 </li>
               ))}
             </ul>
           </section>
         ) : null}
+
         {!loading && tab === 'transcript' ? (
-          <section>
-            {!transcript.length ? <p>No transcript rows yet.</p> : null}
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-                <thead>
-                  <tr>
-                    <th style={{ textAlign: 'left', padding: 8 }}>Course</th>
-                    <th style={{ textAlign: 'left', padding: 8 }}>Status</th>
-                    <th style={{ textAlign: 'left', padding: 8 }}>Progress</th>
-                    <th style={{ textAlign: 'left', padding: 8 }}>Grade</th>
-                    <th style={{ textAlign: 'left', padding: 8 }}>Completed</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {transcript.map((row) => (
-                    <tr key={row.enrollment_id} style={{ borderTop: '1px solid #eee' }}>
-                      <td style={{ padding: 8 }}>
-                        <a href={`/learn/${row.course_slug}`}>{row.course_title}</a>
-                      </td>
-                      <td style={{ padding: 8 }}>{row.status}</td>
-                      <td style={{ padding: 8 }}>{row.progress_pct}%</td>
-                      <td style={{ padding: 8 }}>
-                        {row.current_grade_pct != null ? `${row.current_grade_pct}%` : '—'}{' '}
-                        {row.current_grade_letter || ''}
-                      </td>
-                      <td style={{ padding: 8 }}>
-                        {row.completed_at ? new Date(row.completed_at).toLocaleDateString() : '—'}
-                      </td>
+          <section className="lms-section" aria-labelledby="lms-transcript-heading">
+            <h2 id="lms-transcript-heading" className="lms-section__title">
+              Transcript
+            </h2>
+            {!transcript.length ? (
+              <p className="lms-empty-hint">
+                Your transcript will list courses and grades as you enroll. Start from{' '}
+                <a href="/courses">the course catalog</a>.
+              </p>
+            ) : null}
+            {transcript.length ? (
+              <div className="lms-table-wrap">
+                <table className="lms-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Course</th>
+                      <th scope="col">Status</th>
+                      <th scope="col">Progress</th>
+                      <th scope="col">Grade</th>
+                      <th scope="col">Completed</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {transcript.map((row) => (
+                      <tr key={row.enrollment_id}>
+                        <td>
+                          <a href={`/learn/${encodeURIComponent(row.course_slug)}`}>{row.course_title}</a>
+                        </td>
+                        <td>{row.status}</td>
+                        <td>{row.progress_pct}%</td>
+                        <td>
+                          {row.current_grade_pct != null ? `${row.current_grade_pct}%` : '—'}{' '}
+                          {row.current_grade_letter || ''}
+                        </td>
+                        <td>{row.completed_at ? new Date(row.completed_at).toLocaleDateString() : '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : null}
           </section>
         ) : null}
+
+        <nav className="lms-footer-links" aria-label="Related pages">
+          <a href="/my/learning">My learning</a>
+          {' · '}
+          <a href="/my/calendar">My calendar</a>
+          {' · '}
+          <a href="/courses">Browse courses</a>
+        </nav>
       </div>
     </Page>
   );

@@ -4,22 +4,62 @@ import { LmsOrgLdapSourcesPanel } from '../components/learning/LmsOrgLdapSources
 import { LmsOrgTrendChartsPanel } from '../components/learning/LmsOrgTrendChartsPanel';
 import { Page } from './Page';
 
+import './OrgManagerLearningPage.scss';
+
 export function OrgManagerLearningPage({ id = 'lms_org_learning' }) {
   return (
     <Page id={id}>
-      <div className="lms-page lms-org-learning">
+      <div className="lms-page lms-org-learning lms-shell lms-shell--wide">
         <h1 className="page-title">Org learning</h1>
-        <p className="lms-hint">Manager tools: at-risk learners and directory sync profiles.</p>
-        <LmsOrgTrendChartsPanel days={180} />
-        <hr style={{ margin: '2rem 0', border: 0, borderTop: '1px solid rgba(0,0,0,0.08)' }} />
-        <LmsOrgAtRiskPanel />
-        <hr style={{ margin: '2rem 0', border: 0, borderTop: '1px solid rgba(0,0,0,0.08)' }} />
-        <LmsOrgLdapSourcesPanel />
-        <p style={{ marginTop: '1.5rem' }}>
+        <p className="lms-intro">
+          Monitor engagement trends, identify learners who may need support, and manage directory connections for your
+          organization—all in one place.
+        </p>
+        <div className="lms-hint-box">
+          Need the public catalog or your own courses? Use the links at the bottom of this page.
+        </div>
+
+        <section className="lms-section" aria-labelledby="lms-org-trends-heading">
+          <h2 id="lms-org-trends-heading" className="lms-section__title">
+            Trends
+          </h2>
+          <p className="lms-help-text" style={{ marginBottom: '0.75rem' }}>
+            High-level enrollment and activity patterns over the last 180 days.
+          </p>
+          <LmsOrgTrendChartsPanel days={180} />
+        </section>
+
+        <hr className="lms-divider" />
+
+        <section className="lms-section" aria-labelledby="lms-org-atrisk-heading">
+          <h2 id="lms-org-atrisk-heading" className="lms-section__title">
+            At-risk learners
+          </h2>
+          <p className="lms-help-text" style={{ marginBottom: '0.75rem' }}>
+            Review learners flagged by progress rules and add notes for your team.
+          </p>
+          <LmsOrgAtRiskPanel />
+        </section>
+
+        <hr className="lms-divider" />
+
+        <section className="lms-section" aria-labelledby="lms-org-ldap-heading">
+          <h2 id="lms-org-ldap-heading" className="lms-section__title">
+            Directory sync
+          </h2>
+          <p className="lms-help-text" style={{ marginBottom: '0.75rem' }}>
+            Configure LDAP sources and run syncs so rosters stay aligned with your directory.
+          </p>
+          <LmsOrgLdapSourcesPanel />
+        </section>
+
+        <nav className="lms-footer-links" aria-label="Related pages">
           <a href="/courses">Course catalog</a>
           {' · '}
           <a href="/my/teaching">My teaching</a>
-        </p>
+          {' · '}
+          <a href="/my/learning">My learning</a>
+        </nav>
       </div>
     </Page>
   );

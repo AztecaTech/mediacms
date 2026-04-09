@@ -1,0 +1,9 @@
+@import './lmsPageShared.scss';
+
+.lms-cert-issue-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  align-items: center;
+  margin-top: 0.5rem;
+}

@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Page } from './Page';
 import { AuthoringSortableModules } from '../components/learning/AuthoringSortableModules';
 import {
   lmsGetAuthoring,
@@ -8,6 +7,9 @@ import {
   lmsPatchModule,
   lmsPostLessonDraft,
 } from '../utils/helpers/lmsApi';
+import { Page } from './Page';
+
+import './CourseAuthoringPage.scss';
 
 function readSlug() {
   if (typeof window !== 'undefined' && window.MediaCMS && window.MediaCMS.lmsCourseSlug) {
@@ -151,117 +153,174 @@ export function CourseAuthoringPage({ id = 'lms_teach' }) {
 
   return (
     <Page id={id}>
-      <div className="lms-page lms-authoring" style={{ maxWidth: 960, margin: '0 auto' }}>
+      <div className="lms-page lms-authoring lms-shell lms-shell--wide">
+        <nav className="lms-breadcrumb" aria-label="Breadcrumb">
+          <a href="/my/teaching">My teaching</a>
+          {' / '}
+          <span>Edit course</span>
+        </nav>
         <h1 className="page-title">Edit course</h1>
         {slug ? (
-          <p className="lms-meta">
-            Slug: {slug} · <a href={`/learn/${slug}`}>Preview player</a> ·{' '}
-            <a href={`/teach/${slug}/certificates`}>Certificates</a>
+          <p className="lms-intro">
+            Update how this course appears to learners, reorder modules, and edit lesson text. Slug:{' '}
+            <code>{slug}</code>
           </p>
         ) : null}
-        {error ? <p className="error-message" style={{ whiteSpace: 'pre-line' }}>{error}</p> : null}
+        {slug ? (
+          <div className="lms-btn-row" style={{ marginTop: 0 }}>
+            <a className="lms-btn lms-btn--secondary lms-btn--sm" href={`/learn/${encodeURIComponent(slug)}`}>
+              Preview as learner
+            </a>
+            <a className="lms-btn lms-btn--secondary lms-btn--sm" href={`/teach/${encodeURIComponent(slug)}/certificates`}>
+              Certificates
+            </a>
+            <a className="lms-btn lms-btn--secondary lms-btn--sm" href={`/courses/${encodeURIComponent(slug)}`}>
+              Public overview
+            </a>
+          </div>
+        ) : null}
+        {error ? (
+          <p className="error-message" style={{ whiteSpace: 'pre-line' }}>
+            Something went wrong while saving or loading. {error}
+          </p>
+        ) : null}
 
-        <section style={{ marginBottom: '1.5rem' }}>
-          <h2>Course details</h2>
-          <form onSubmit={saveCourseMeta} style={{ display: 'grid', gap: 8 }}>
+        <section className="lms-section" aria-labelledby="lms-author-course-meta">
+          <h2 id="lms-author-course-meta" className="lms-section__title">
+            Course details
+          </h2>
+          <p className="lms-help-text" style={{ marginBottom: '0.75rem' }}>
+            Title and description show on the catalog and course overview page.
+          </p>
+          <form className="lms-form-stack" onSubmit={saveCourseMeta}>
             <label>
               Title
               <input
+                className="lms-input"
                 type="text"
                 value={courseTitle}
                 onChange={(e) => setCourseTitle(e.target.value)}
-                style={{ width: '100%', maxWidth: 480 }}
               />
             </label>
             <label>
               Description
               <textarea
+                className="lms-textarea lms-textarea--grow"
                 value={courseDesc}
                 onChange={(e) => setCourseDesc(e.target.value)}
-                rows={3}
-                style={{ width: '100%', maxWidth: 560 }}
+                rows={4}
               />
             </label>
-            <button type="submit" className="button-link" disabled={saving}>
-              Save course
+            <button type="submit" className="lms-btn lms-btn--primary lms-btn--sm" disabled={saving}>
+              {saving ? 'Saving…' : 'Save course details'}
             </button>
           </form>
         </section>
 
-        <section style={{ marginBottom: '1.5rem' }}>
-          <h2>Module order</h2>
-          <p className="lms-meta" style={{ fontSize: 13 }}>
-            Drag to reorder; saves new order indices to the server.
+        <section className="lms-section" aria-labelledby="lms-author-modules">
+          <h2 id="lms-author-modules" className="lms-section__title">
+            Module order
+          </h2>
+          <p className="lms-help-text" style={{ marginBottom: '0.75rem' }}>
+            Drag modules to change the order learners see. Changes save immediately.
           </p>
           <AuthoringSortableModules modules={modulesSorted} onReorder={onReorderModules} />
         </section>
 
-        <section style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-          <div>
-            <h2>Lessons</h2>
-            <ul style={{ listStyle: 'none', padding: 0 }}>
-              {flatLessons.map((les) => (
-                <li key={les.id} style={{ marginBottom: 6 }}>
-                  <button
-                    type="button"
-                    className="link-like"
-                    style={{ fontWeight: selectedLessonId === les.id ? 700 : 400 }}
-                    onClick={() => setSelectedLessonId(les.id)}
-                  >
-                    {les._moduleTitle}: {les.title}
+        <section className="lms-section" aria-labelledby="lms-author-lessons">
+          <h2 id="lms-author-lessons" className="lms-section__title">
+            Lessons
+          </h2>
+          <p className="lms-help-text" style={{ marginBottom: '0.85rem' }}>
+            Pick a lesson on the left, then edit its title, text (markdown), and prerequisites.
+          </p>
+          <div className="lms-authoring-grid">
+            <div>
+              <h3 className="lms-section__title" style={{ fontSize: '0.95rem' }}>
+                All lessons
+              </h3>
+              {flatLessons.length ? (
+                <ul className="lms-lesson-picker">
+                  {flatLessons.map((les) => (
+                    <li key={les.id}>
+                      <button
+                        type="button"
+                        className={
+                          'lms-lesson-picker__btn' + (selectedLessonId === les.id ? ' is-active' : '')
+                        }
+                        onClick={() => setSelectedLessonId(les.id)}
+                      >
+                        <span className="lms-meta" style={{ display: 'block', fontSize: '0.78rem' }}>
+                          {les._moduleTitle}
+                        </span>
+                        {les.title}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="lms-empty-hint">No lessons yet. Add modules and lessons in Django admin if needed.</p>
+              )}
+            </div>
+            <div>
+              <h3 className="lms-section__title" style={{ fontSize: '0.95rem' }}>
+                Lesson editor
+              </h3>
+              {!selected ? (
+                <p className="lms-empty-hint">Select a lesson from the list to edit its content.</p>
+              ) : null}
+              {selected ? (
+                <form className="lms-form-stack" onSubmit={saveLesson}>
+                  <label>
+                    Title
+                    <input className="lms-input" type="text" value={title} onChange={(e) => setTitle(e.target.value)} />
+                  </label>
+                  <label>
+                    Text body (markdown: **bold**, *italic*, `code`; blank line = new paragraph)
+                    <textarea
+                      className="lms-textarea lms-textarea--code"
+                      value={textBody}
+                      onChange={(e) => setTextBody(e.target.value)}
+                      rows={14}
+                    />
+                  </label>
+                  <label>
+                    Prerequisites (same course)
+                    <select
+                      className="lms-input lms-prereq-multi"
+                      multiple
+                      value={prereqIds.map(String)}
+                      onChange={(e) => {
+                        const opts = [...e.target.selectedOptions].map((o) => Number(o.value));
+                        setPrereqIds(opts);
+                      }}
+                    >
+                      {flatLessons
+                        .filter((l) => l.id !== selected.id)
+                        .map((l) => (
+                          <option key={l.id} value={l.id}>
+                            {l._moduleTitle}: {l.title}
+                          </option>
+                        ))}
+                    </select>
+                  </label>
+                  <button type="submit" className="lms-btn lms-btn--primary lms-btn--sm" disabled={saving}>
+                    {saving ? 'Saving…' : 'Save lesson'}
                   </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <h2>Lesson editor</h2>
-            {!selected ? <p className="lms-meta">Select a lesson.</p> : null}
-            {selected ? (
-              <form onSubmit={saveLesson} style={{ display: 'grid', gap: 8 }}>
-                <label>
-                  Title
-                  <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} style={{ width: '100%' }} />
-                </label>
-                <label>
-                  Text body (markdown: **bold**, *italic*, `code`, blank line = paragraph)
-                  <textarea
-                    value={textBody}
-                    onChange={(e) => setTextBody(e.target.value)}
-                    rows={12}
-                    style={{ width: '100%', fontFamily: 'monospace', fontSize: 13 }}
-                  />
-                </label>
-                <label>
-                  Prerequisites (same course)
-                  <select
-                    multiple
-                    value={prereqIds.map(String)}
-                    onChange={(e) => {
-                      const opts = [...e.target.selectedOptions].map((o) => Number(o.value));
-                      setPrereqIds(opts);
-                    }}
-                    style={{ width: '100%', minHeight: 120 }}
-                  >
-                    {flatLessons
-                      .filter((l) => l.id !== selected.id)
-                      .map((l) => (
-                        <option key={l.id} value={l.id}>
-                          {l._moduleTitle}: {l.title}
-                        </option>
-                      ))}
-                  </select>
-                </label>
-                <button type="submit" className="button-link" disabled={saving}>
-                  {saving ? 'Saving…' : 'Save lesson'}
-                </button>
-                <p className="lms-meta" style={{ fontSize: 12 }}>
-                  Draft autosave to server runs while you type (debounced). Recent drafts: {drafts.length}.
-                </p>
-              </form>
-            ) : null}
+                  <p className="lms-help-text">
+                    Drafts auto-save while you type (short delay). Server drafts stored: {drafts.length}.
+                  </p>
+                </form>
+              ) : null}
+            </div>
           </div>
         </section>
+
+        <nav className="lms-footer-links" aria-label="Related pages">
+          <a href="/my/teaching">My teaching</a>
+          {' · '}
+          <a href="/courses">Course catalog</a>
+        </nav>
       </div>
     </Page>
   );

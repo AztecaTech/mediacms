@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
+import { LearningPathCatalogCard } from '../components/lms/LearningPathCatalogCard';
 import { Page } from './Page';
 import { lmsLearningPaths } from '../utils/helpers/lmsApi';
+
+import './LearningPathsCatalogPage.scss';
 
 export function LearningPathsCatalogPage({ id = 'lms_paths' }) {
   const [rows, setRows] = useState([]);
@@ -14,20 +17,26 @@ export function LearningPathsCatalogPage({ id = 'lms_paths' }) {
 
   return (
     <Page id={id}>
-      <div className="lms-page" style={{ maxWidth: 720, margin: '0 auto' }}>
+      <div className="lms-page lms-shell lms-shell--wide">
         <h1 className="page-title">Learning paths</h1>
+        <p className="lms-intro">
+          Paths group courses in order—use them for structured programs or certifications. Open a path to see each
+          step.
+        </p>
         {error ? <p className="error-message">{error}</p> : null}
-        <ul style={{ listStyle: 'none', padding: 0 }}>
+        <div className="lms-grid-cards" role="list">
           {rows.map((p) => (
-            <li key={p.id} style={{ marginBottom: '0.75rem' }}>
-              <a href={`/learning-paths/${encodeURIComponent(p.slug)}`} style={{ fontWeight: 600 }}>
-                {p.title}
-              </a>
-              {p.description ? <p className="lms-meta" style={{ margin: '0.25rem 0 0' }}>{p.description}</p> : null}
-            </li>
+            <div key={p.id} role="listitem">
+              <LearningPathCatalogCard path={p} />
+            </div>
           ))}
-        </ul>
-        {!error && !rows.length ? <p className="lms-meta">No published paths yet.</p> : null}
+        </div>
+        {!error && !rows.length ? <p className="lms-empty-hint">No published paths yet.</p> : null}
+        <nav className="lms-footer-links" aria-label="Related pages">
+          <a href="/courses">Courses</a>
+          {' · '}
+          <a href="/my/learning">My learning</a>
+        </nav>
       </div>
     </Page>
   );
